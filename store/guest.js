@@ -44,7 +44,7 @@ export const actions = {
 
   async addGuest(state, guest) {
     var response = await this.$axios.post('guest.php', guest);
-    if (response.code == 200) {
+    if (response.data.code == 200) {
       return true;
     } else {
       alert(response.message);
@@ -70,6 +70,16 @@ export const actions = {
       } else {
         alert(response.message);
       }
+    }
+  },
+
+  async checkIn(state, code) {
+    var response = await this.$axios.post('checkin.php', {code: code});
+    console.log(response);
+    if (response.data.code == 200) {
+      return true;
+    } else {
+      alert(response.data.message);
     }
   }
 

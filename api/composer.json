@@ -1,6 +1,5 @@
 {
     "require": {
-        "rakibtg/sleekdb": "^2.13",
-        "endroid/qr-code": "^4.3"
+        "rakibtg/sleekdb": "^2.13"
     }
 }

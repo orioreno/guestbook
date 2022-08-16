@@ -17,8 +17,9 @@ export const actions = {
     var response = await this.$axios.$get('event.php');
     if (response.code == 200) {
       this.commit('event/setList', response.data);
-      response.data.forEach((row) => {
+      response.data.forEach((row, index) => {
         if (row.selected) {
+          row.index = index;
           this.commit('event/setSelected', row);
           this.commit('navbar/setTitle', row.name);
         }

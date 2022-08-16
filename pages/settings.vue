@@ -31,7 +31,7 @@
     </v-expansion-panel>
 
     <v-expansion-panel>
-      <v-expansion-panel-header>Deactivate</v-expansion-panel-header>
+      <v-expansion-panel-header color="error">Deactivate</v-expansion-panel-header>
       <v-expansion-panel-content>
         <v-form
           class="mt-2"
@@ -41,14 +41,14 @@
           @submit.prevent="deactivate"
         >
           <v-text-field
-            label="Type event name"
+            label="Enter event name for confirmation"
             required
             outlined
             :rules="[v => !!v || 'Please enter current event name', v => v == defaultEventName || 'Event name does not match']"
             v-model="deactivationCode"
             class="mb-1"
           ></v-text-field>
-          <v-btn type="submit" color="red">Deactivate current event</v-btn>
+          <v-btn type="submit" color="error">Deactivate current event</v-btn>
         </v-form>
       </v-expansion-panel-content>
     </v-expansion-panel>
@@ -57,6 +57,9 @@
 
 <script>
 export default {
+  head: {
+    title: 'Settings'
+  },
   data() {
     return {
       panel: 0,

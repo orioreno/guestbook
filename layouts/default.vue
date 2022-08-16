@@ -3,7 +3,6 @@
     <v-navigation-drawer
       v-model="drawer"
       :mini-variant="miniVariant"
-      :stateless="true"
       fixed
       app
     >
@@ -38,7 +37,8 @@
       fixed
       app
     >
-      <v-app-bar-nav-icon @click.stop="$store.commit('navbar/toggleDrawer')" />
+      <v-app-bar-nav-icon class="d-lg-none" @click.stop="$store.commit('navbar/toggleDrawer')" />
+      <v-icon class="d-none d-lg-inline" left>mdi-package-variant</v-icon>
       <v-toolbar-title v-text="title" />
 
       <v-spacer></v-spacer>
@@ -54,18 +54,27 @@
             <v-icon>mdi-dots-vertical</v-icon>
           </v-btn>
         </template>
-        <v-list>
-          <v-list-item
-            v-for="(event, index) in events"
-            :key="index"
-            @click="$store.dispatch('event/changeSelected', event)"
+        <v-list shaped>
+          <v-subheader>
+            <v-icon class="mr-2" color="grey">mdi-swap-horizontal</v-icon>
+            CHANGE EVENTS
+          </v-subheader>
+          <v-list-item-group
+            v-model="selectedEvent.index"
+            color="primary"
           >
-            <v-list-item-title>
-              {{ event.name }}
-              <v-icon style="font-size:small" color="primary" v-if="event.selected">mdi-check-circle</v-icon>
-            </v-list-item-title>
-          </v-list-item>
-          <v-list-item class="mt-3">
+            <v-list-item
+              v-for="(event) in events"
+              :key="event._id"
+              @click="$store.dispatch('event/changeSelected', event)"
+            >
+              <v-list-item-title>
+                {{ event.name }}
+              </v-list-item-title>
+            </v-list-item>
+          </v-list-item-group>
+          <v-divider class="mt-2"></v-divider>
+          <v-list-item class="mt-2">
             <CreateEventDialog />
           </v-list-item>
         </v-list>
@@ -83,61 +92,64 @@
 <script>
 import CreateEventDialog from '~/components/CreateEventDialog.vue';
 export default {
-    name: "DefaultLayout",
-    data() {
-        return {
-            items: [
-                {
-                    icon: "mdi-apps",
-                    title: "Dashboard",
-                    to: "/"
-                },
-                {
-                    icon: "mdi-account-group",
-                    title: "Guests",
-                    to: "/guest"
-                },
-                {
-                    icon: "mdi-qrcode-scan",
-                    title: "Scan",
-                    to: "/scan"
-                },
-                {
-                    icon: "mdi-cog",
-                    title: "Setting",
-                    to: "/setting"
-                }
-            ],
-        };
+  name: "DefaultLayout",
+  data() {
+    return {
+      items: [
+        {
+          icon: "mdi-apps",
+          title: "Dashboard",
+          to: "/"
+        },
+        {
+          icon: "mdi-account-group",
+          title: "Guests",
+          to: "/guest"
+        },
+        {
+          icon: "mdi-qrcode-scan",
+          title: "Scan",
+          to: "/scan"
+        },
+        {
+          icon: "mdi-cog",
+          title: "Settings",
+          to: "/settings"
+        }
+      ],
+    };
+  },
+  created() {
+    this.$store.commit("navbar/loadLocalSettings");
+    this.$store.dispatch("event/loadEvents");
+  },
+  computed: {
+    drawer: {
+      get() {
+        return this.$store.state.navbar.drawer;
+      },
+      set(val) {
+        this.$store.commit("navbar/toggleDrawer", val);
+      }
     },
-    created() {
-        this.$store.commit("navbar/loadLocalSettings");
-        this.$store.dispatch("event/loadEvents");
+    miniVariant: {
+      get() {
+        return this.$store.state.navbar.miniVariant;
+      },
+      set(val) {
+        this.$store.commit("navbar/toggleMiniVariant", val);
+      }
     },
-    computed: {
-        drawer: {
-            get() {
-                return this.$store.state.navbar.drawer;
-            },
-            set(val) {
-                this.$store.commit("navbar/toggleDrawer", val);
-            }
-        },
-        miniVariant: {
-            get() {
-                return this.$store.state.navbar.miniVariant;
-            },
-            set(val) {
-                this.$store.commit("navbar/toggleMiniVariant", val);
-            }
-        },
-        title() {
-            return this.$store.state.navbar.title;
-        },
-        events() {
-            return this.$store.state.event.list;
-        },
+    title() {
+      return this.$store.state.navbar.title;
     },
-    components: { CreateEventDialog, CreateEventDialog }
+    events() {
+      return this.$store.state.event.list;
+    },
+    selectedEvent() {
+      return this.$store.state.event.selected ?? {};
+    }
+  },
+  components: { CreateEventDialog, CreateEventDialog }
 }
 </script>

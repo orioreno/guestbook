@@ -26,8 +26,10 @@ export const mutations = {
   loadLocalSettings(state) {
     if (process.browser){
       var settings = JSON.parse(localStorage.getItem("navbar"));
-      if (settings.drawer) state.drawer = settings.drawer;
-      if (settings.miniVariant) state.miniVariant = settings.miniVariant;
+      if (settings) {
+        if (settings.drawer) state.drawer = settings.drawer;
+        if (settings.miniVariant) state.miniVariant = settings.miniVariant;
+      }
     }
   }
 }

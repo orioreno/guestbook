@@ -57,10 +57,27 @@
         :headers="headers"
         :items="guests"
         :search="search"
+        sort-by="name"
         :loading="loading"
         :multi-sort="true"
         loading-text="Loading data"
-      ></v-data-table>
+      >
+        <template v-slot:item.actions="{ item }">
+          <v-icon
+            small
+            class="mr-2"
+            @click="editItem(item)"
+          >
+            mdi-pencil
+          </v-icon>
+          <v-icon
+            small
+            @click="deleteItem(item)"
+          >
+            mdi-delete
+          </v-icon>
+        </template>
+      </v-data-table>
     </v-card>
   </div>
 </template>
@@ -69,6 +86,9 @@
 import * as XLSX from 'xlsx/xlsx.mjs';
 export default {
   name: "GuestPage",
+  head: {
+    title: 'Guests'
+  },
   data () {
     return {
       importDialog: false,
@@ -108,6 +128,7 @@ export default {
 
               if (!columns.includes("name")) {
                 alert('Data should contains column name');
+                this.importInput = null;
                 return;
               }
             } else {
@@ -143,10 +164,20 @@ export default {
   },
   computed: {
     guests() {
-      return this.$store.state.guest.list;
+      return [...this.$store.state.guest.list];
     },
     headers() {
-      return this.$store.state.guest.columns;
+      var columns = [...this.$store.state.guest.columns];
+      columns.push({
+        text: 'Check In Code',
+        value: '_checkin_code'
+      });
+      columns.push({
+        text: 'Actions',
+        value: 'actions',
+        sortable: false
+      });
+      return columns;
     }
   }
 }
