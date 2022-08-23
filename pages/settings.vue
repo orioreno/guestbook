@@ -13,14 +13,12 @@
           <v-text-field
             label="Event name *"
             required
-            outlined
             :rules="[v => !!v || 'Event name is required']"
             v-model="event.name"
             class="mb-1"
           ></v-text-field>
           <v-textarea
             label="Scan success message"
-            outlined
             v-model="event.scan_message"
             hint="{column name} will be replaced by column value"
             class="mb-1"
@@ -43,7 +41,6 @@
           <v-text-field
             label="Enter event name for confirmation"
             required
-            outlined
             :rules="[v => !!v || 'Please enter current event name', v => v == defaultEventName || 'Event name does not match']"
             v-model="deactivationCode"
             class="mb-1"

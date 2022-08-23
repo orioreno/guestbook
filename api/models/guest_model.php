@@ -8,7 +8,7 @@ class GuestModel extends Model{
     public function initDb() {
         $eventModel = new EventModel();
         $selectedEvent = $eventModel->selected();
-        if (isset($selectedEvent['_id'])) $this->use($selectedEvent['_id'], "guest");
+        if (isset($selectedEvent['_id'])) $this->db = $this->use($selectedEvent['_id'], "guest");
     }
 
     public function getAll() {
@@ -62,7 +62,20 @@ class GuestModel extends Model{
     }
 
     public function update($data) {
-        return $this->db->update($data);
+        if (isset($data['_id'])) {
+            $row = $this->db->findById($data['_id']);
+            if (isset($data['regenerate']) && $data['regenerate']) {
+                $row = $this->generate_checkin_code($row);
+            }
+
+            foreach ($row as $key => $value) {
+                if (isset($data[$key])) {
+                  $row[$key] = $data[$key];
+                }
+            }
+            return $this->db->update($row);
+        }
+
     }
 
     public function delete($id) {
@@ -78,5 +91,21 @@ class GuestModel extends Model{
             }
         }
         return false;
+    }
+
+    public function clone($id, $regenerate = false) {
+        $this->drop();
+        $this->initDb();
+
+        $dbSource = $this->use($id, "guest");
+        $dataSource = $dbSource->findAll();
+        foreach ($dataSource as &$row) {
+            if (isset($row['_checkin_time'])) unset($row['_checkin_time']);
+            if (isset($row['_id'])) unset($row['_id']);
+            if ($regenerate) $row = $this->generate_checkin_code(($row));
+            $this->db->insert($row);
+        }
+
+        return true;
     }
 }

@@ -54,10 +54,10 @@ export const actions = {
   async editGuest(state, guest) {
     if (guest._id) {
       var response = await this.$axios.patch('guest.php', guest);
-      if (response.code == 200) {
+      if (response.data.code == 200) {
         return true;
       } else {
-        alert(response.message);
+        alert(response.data.message);
       }
     }
   },
@@ -65,11 +65,20 @@ export const actions = {
   async deleteGuest(state, {_id}) {
     if (_id) {
       var response = await this.$axios.delete('guest.php?id='+_id);
-      if (response.code == 200) {
+      if (response.data.code == 200) {
         return true;
       } else {
-        alert(response.message);
+        alert(response.data.message);
       }
+    }
+  },
+
+  async cloneGuests(state, param) {
+    var response = await this.$axios.$post('clone_guest.php', param);
+    if (response.code == 200) {
+      return true;
+    } else {
+      alert(response.message);
     }
   },
 

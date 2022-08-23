@@ -55,8 +55,8 @@ class GuestAPI extends API {
     }
 
     function delete() {
-        if (!empty($this->input)) {
-            if ($this->model->delete($this->input)) {
+        if (isset($_GET['id']) && !empty($_GET['id'])) {
+            if ($this->model->delete($_GET['id'])) {
                 $this->response_success();
             }
             $this->response_failed(500);

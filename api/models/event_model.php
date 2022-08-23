@@ -1,7 +1,7 @@
 <?php
 class EventModel extends Model{
     public function __construct() {
-        $this->use("event");
+        $this->db = $this->use("event");
     }
 
     public function getAll() {

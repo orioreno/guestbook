@@ -4,6 +4,6 @@ class Model {
     var $db;
     public function use($databaseName, $databaseSubdirectory = "", $storeConfiguration = []) {
         $storeConfiguration['timeout'] = false;
-        $this->db = new \SleekDB\Store($databaseName, self::databaseDirectory.($databaseSubdirectory ? '/'.$databaseSubdirectory : ''), $storeConfiguration);
+        return new \SleekDB\Store($databaseName, self::databaseDirectory.($databaseSubdirectory ? '/'.$databaseSubdirectory : ''), $storeConfiguration);
     }
 }
