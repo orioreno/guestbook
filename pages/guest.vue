@@ -1,14 +1,13 @@
 <template>
   <div>
-    <div class="mb-3 d-flex">
-
+    <div>
       <v-menu offset-y>
         <template v-slot:activator="{ on, attrs }">
           <v-btn
             color="primary"
             v-bind="attrs"
             v-on="on"
-            class="mr-2"
+            class="mr-2 mb-2"
             :loading="downloading"
           >
             <v-icon left>mdi-upload</v-icon>
@@ -32,7 +31,7 @@
       <v-btn
         v-if="this.headers.length > 0"
         color="primary"
-        class="mr-2"
+        class="mr-2 mb-2"
         @click.stop="openGuestForm"
       >
         <v-icon left>mdi-plus</v-icon>
@@ -45,7 +44,7 @@
             color="primary"
             v-bind="attrs"
             v-on="on"
-        class="mr-2"
+            class="mr-2 mb-2"
             :loading="downloading"
           >
 
