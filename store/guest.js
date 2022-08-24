@@ -14,7 +14,7 @@ export const mutations = {
 
 export const actions = {
   async loadGuests(state) {
-    var response = await this.$axios.$get('guest.php');
+    const response = await this.$axios.$get('guest.php');
     if (response.code == 200) {
 
       let columns = [];
@@ -33,63 +33,39 @@ export const actions = {
 
   async importGuests(state, guests) {
     if (guests.length > 0) {
-      var response = await this.$axios.$put('guest.php', guests);
-      if (response.code == 200) {
-        return true;
-      } else {
-        alert(response.message);
-      }
+      const response = await this.$axios.$put('guest.php', guests);
+      return response.code == 200 ? true : response.message;
     }
+    return 'Please specify guest';
   },
 
   async addGuest(state, guest) {
-    var response = await this.$axios.post('guest.php', guest);
-    if (response.data.code == 200) {
-      return true;
-    } else {
-      alert(response.message);
-    }
+    const response = await this.$axios.post('guest.php', guest);
+    return response.data.code == 200 ? true : response.data.message;
   },
 
   async editGuest(state, guest) {
     if (guest._id) {
-      var response = await this.$axios.patch('guest.php', guest);
-      if (response.data.code == 200) {
-        return true;
-      } else {
-        alert(response.data.message);
-      }
+      const response = await this.$axios.patch('guest.php', guest);
+      return response.data.code == 200 ? true : response.data.message;
     }
+    return 'Please select a guest';
   },
 
   async deleteGuest(state, {_id}) {
     if (_id) {
-      var response = await this.$axios.delete('guest.php?id='+_id);
-      if (response.data.code == 200) {
-        return true;
-      } else {
-        alert(response.data.message);
-      }
+      const response = await this.$axios.delete('guest.php?id='+_id);
+      return response.data.code == 200 ? true : response.data.message;
     }
   },
 
-  async cloneGuests(state, param) {
-    var response = await this.$axios.$post('clone_guest.php', param);
-    if (response.code == 200) {
-      return true;
-    } else {
-      alert(response.message);
-    }
+  async cloneGuests(state, cloneEventId, regenerate) {
+    const response = await this.$axios.$request({
+      'url': 'guest.php',
+      'method': 'clone',
+      'data': {cloneEventId: cloneEventId, regenerate: regenerate}
+    });
+    return response.code == 200 ? true : response.message;
   },
-
-  async checkIn(state, code) {
-    var response = await this.$axios.post('checkin.php', {code: code});
-    console.log(response);
-    if (response.data.code == 200) {
-      return true;
-    } else {
-      alert(response.data.message);
-    }
-  }
 
 }

@@ -1,73 +1,73 @@
 <template>
   <div>
-    <div>
-      <v-menu offset-y>
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn
-            color="primary"
-            v-bind="attrs"
-            v-on="on"
-            class="mr-2 mb-2"
-            :loading="downloading"
-          >
-            <v-icon left>mdi-upload</v-icon>
-            Import guests
-          </v-btn>
-        </template>
-        <v-list>
-          <v-list-item
-            link
-            @click.stop="openImportDialog">
-            <v-list-item-title>From XLSX file</v-list-item-title>
-          </v-list-item>
-          <v-list-item
-            link
-            @click.stop="openCloneDialog">
-            <v-list-item-title>From other event</v-list-item-title>
-          </v-list-item>
-        </v-list>
-      </v-menu>
-
-      <v-btn
-        v-if="this.headers.length > 0"
-        color="primary"
-        class="mr-2 mb-2"
-        @click.stop="openGuestForm"
-      >
-        <v-icon left>mdi-plus</v-icon>
-        Add guest
-      </v-btn>
-
-      <v-menu offset-y v-if="guests.length > 0">
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn
-            color="primary"
-            v-bind="attrs"
-            v-on="on"
-            class="mr-2 mb-2"
-            :loading="downloading"
-          >
-
-            <v-icon left>mdi-download</v-icon>
-            Download
-          </v-btn>
-        </template>
-        <v-list>
-          <v-list-item
-            link
-            @click.stop="generateXLSX">
-            <v-list-item-title>Guest list (XLSX)</v-list-item-title>
-          </v-list-item>
-          <v-list-item
-            link
-            @click.stop="downloadQr">
-            <v-list-item-title>Check in QR codes (ZIP)</v-list-item-title>
-          </v-list-item>
-        </v-list>
-      </v-menu>
-    </div>
     <v-card>
       <v-card-title>
+        <v-menu offset-y>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn
+              color="primary"
+              v-bind="attrs"
+              v-on="on"
+              class="mr-2 mb-2"
+              :loading="savingGuest"
+            >
+              <v-icon left>mdi-upload</v-icon>
+              Import guests
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item
+              link
+              @click.stop="openImportDialog">
+              <v-list-item-title>From XLSX file</v-list-item-title>
+            </v-list-item>
+            <v-list-item
+              link
+              @click.stop="openCloneDialog">
+              <v-list-item-title>From other event</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+
+        <v-btn
+          v-if="this.headers.length > 0"
+          color="primary"
+          class="mr-2 mb-2"
+          @click.stop="openGuestForm"
+        >
+          <v-icon left>mdi-plus</v-icon>
+          Add guest
+        </v-btn>
+
+        <v-menu offset-y v-if="guests.length > 0">
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn
+              color="primary"
+              v-bind="attrs"
+              v-on="on"
+              class="mr-2 mb-2"
+              :loading="downloading"
+            >
+
+              <v-icon left>mdi-download</v-icon>
+              Download
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item
+              link
+              @click.stop="generateXLSX">
+              <v-list-item-title>Guest list (XLSX)</v-list-item-title>
+            </v-list-item>
+            <v-list-item
+              link
+              @click.stop="downloadQr">
+              <v-list-item-title>Check in QR codes (ZIP)</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+      </v-card-title>
+      <v-card-subtitle>
         <v-text-field
           v-model="search"
           append-icon="mdi-magnify"
@@ -75,7 +75,7 @@
           single-line
           hide-details
         ></v-text-field>
-      </v-card-title>
+      </v-card-subtitle>
       <v-data-table
         id="datatable"
         :headers="headers"
@@ -86,17 +86,14 @@
         :multi-sort="true"
         loading-text="Loading data"
       >
-        <template v-slot:item._checkin_code="{ item }">
-          <v-btn
-            class="ma-2"
-            outlined
-            @click.stop="showQr(item)"
-            title="Click to view QR code"
-          >
-            {{ item._checkin_code }}
-          </v-btn>
-        </template>
         <template v-slot:item.actions="{ item }">
+          <v-icon
+            small
+            class="mr-2"
+            @click="showQr(item)"
+          >
+            mdi-qrcode
+          </v-icon>
           <v-icon
             small
             class="mr-2"
@@ -106,6 +103,7 @@
           </v-icon>
           <v-icon
             small
+            class="mr-2"
             @click="deleteGuest(item)"
           >
             mdi-delete
@@ -232,7 +230,7 @@
       >
         <v-card>
           <v-card-title>
-            Edit guest
+            {{ guestFormData._id ? 'Edit Guest' : 'Add Guest' }}
           </v-card-title>
           <v-card-text>
               <div v-for="(header, idx) in headers"
@@ -259,7 +257,6 @@
               color="primary"
               text
               :loading="savingGuest"
-              @click.stop="saveGuest"
             >
               Save Changes
             </v-btn>
@@ -271,8 +268,6 @@
 </template>
 
 <script>
-import * as XLSX from 'xlsx/xlsx.mjs';
-import * as QRCode from 'easyqrcodejs';
 import * as JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
@@ -307,7 +302,7 @@ export default {
       this.$store.dispatch("guest/loadGuests");
     },
     openImportDialog() {
-      this.importInput = false;
+      this.importInput = null;
       this.importDialog = true;
       this.importData = [];
     },
@@ -319,12 +314,12 @@ export default {
         reader.onload = (e) => {
           /* Parse data */
           const bstr = e.target.result;
-          const wb = XLSX.read(bstr, { type: "binary" });
+          const wb = this.$xlsx.read(bstr, { type: "binary" });
           /* Get first worksheet */
           const wsname = wb.SheetNames[0];
           const ws = wb.Sheets[wsname];
           /* Convert array of arrays */
-          const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
+          const data = this.$xlsx.utils.sheet_to_json(ws, { header: 1 });
           for (let idx in data) {
             const row = data[idx];
             if (idx == 0) {
@@ -353,14 +348,18 @@ export default {
       }
     },
     async uploadImportFile() {
-      if (confirm("Current data will be replaced. Are you sure?")) {
+      if (this.guests.length <= 0 || confirm("Current data will be replaced and attendance history will be cleared. Are you sure?")) {
         this.savingGuest = true;
-        await this.$store.dispatch("guest/importGuests", this.importData);
-        this.importData = [];
-        this.importInput = null;
+        const resp = await this.$store.dispatch("guest/importGuests", this.importData);
+        if (resp === true) {
+          this.importData = [];
+          this.importInput = null;
+          this.importDialog = false;
+          this.loadGuests();
+        } else {
+          alert(resp);
+        }
         this.savingGuest = false;
-        this.importDialog = false;
-        this.loadGuests();
       }
     },
     async generateXLSX() {
@@ -382,11 +381,11 @@ export default {
         }
         data.push(row);
       }
-      var wb = XLSX.utils.book_new();
-      var ws = XLSX.utils.aoa_to_sheet(data);
-      XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+      var wb = this.$xlsx.utils.book_new();
+      var ws = this.$xlsx.utils.aoa_to_sheet(data);
+      this.$xlsx.utils.book_append_sheet(wb, ws, "Sheet1");
       this.downloading = false;
-      return XLSX.writeFile(wb, this.$store.state.event.selected.name + " guests list.xlsx");
+      return this.$xlsx.writeFile(wb, this.$store.state.event.selected.name + " guests list.xlsx");
     },
     showQr(guest) {
       this.$refs.qrcode.innerHTML = '';
@@ -409,7 +408,7 @@ export default {
         colorLight : "#ffffff",
       }
       // Create new QRCode Object
-      new QRCode(this.$refs.qrcode, options);
+      this.$createQR(this.$refs.qrcode, options);
       this.qrDialog = true;
     },
     downloadQr() {
@@ -449,9 +448,13 @@ export default {
     async deleteGuest(guest) {
       if (confirm("Do you want to remove " + guest.name + " from guest list?")) {
         this.savingGuest = true;
-        await this.$store.dispatch("guest/deleteGuest", guest);
+        const resp = await this.$store.dispatch("guest/deleteGuest", guest);
+        if (resp === true) {
+          this.loadGuests();
+        } else {
+          alert(resp);
+        }
         this.savingGuest = false;
-        this.loadGuests();
       }
     },
     async saveGuest() {
@@ -464,16 +467,24 @@ export default {
 
       if (data) {
         this.savingGuest = true;
+        let storeMethod = "guest/addGuest";
+
         if (this.guestFormData._id) {
           data._id = this.guestFormData._id;
           data.regenerate = this.guestFormRegenerate;
-          await this.$store.dispatch("guest/editGuest", data);
-        } else {
-          await this.$store.dispatch("guest/addGuest", data);
+          storeMethod = "guest/editGuest";
         }
+
+        const resp = await this.$store.dispatch(storeMethod, data);
+        console.log(resp);
+        if (resp === true) {
+          this.guestFormDialog = false;
+          this.loadGuests();
+        } else {
+          alert(resp);
+        }
+
         this.savingGuest = false;
-        this.guestFormDialog = false;
-        this.loadGuests();
       }
     },
     openCloneDialog() {
@@ -482,12 +493,16 @@ export default {
       this.cloneDialog = true;
     },
     async cloneGuest() {
-      if (confirm("Current data will be replaced. Are you sure?")) {
+      if (this.guests.length <= 0 || confirm("Current guests will be replaced and attendance history will be cleared. Are you sure?")) {
         this.savingGuest = true;
-        await this.$store.dispatch("guest/cloneGuests", {_id: this.cloneEventId, regenerate: this.cloneRegenerate});
+        const resp = await this.$store.dispatch("guest/cloneGuests", this.cloneEventId, this.cloneRegenerate);
+        if (resp === true) {
+          this.cloneDialog = false;
+          this.loadGuests();
+        } else {
+          alert(resp);
+        }
         this.savingGuest = false;
-        this.cloneDialog = false;
-        this.loadGuests();
       }
     }
   },

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@nuxtjs/axios": "^5.13.6",
+    "@nuxtjs/moment": "^1.6.1",
     "core-js": "^3.19.3",
     "easyqrcodejs": "^4.4.12",
     "file-saver": "^2.0.5",

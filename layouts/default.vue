@@ -66,7 +66,7 @@
             <v-list-item
               v-for="(event) in events"
               :key="event._id"
-              @click="$store.dispatch('event/changeSelected', event)"
+              @click.stop="switchEvent(event)"
             >
               <v-list-item-title>
                 {{ event.name }}
@@ -118,6 +118,16 @@ export default {
         }
       ],
     };
+  },
+  methods: {
+    async switchEvent(event) {
+      const resp = await this.$store.dispatch('event/changeSelected', event);
+      if (resp === true) {
+        window.location.reload(true);
+      } else {
+        alert(resp);
+      }
+    }
   },
   created() {
     this.$store.commit("navbar/loadLocalSettings");

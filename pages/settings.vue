@@ -23,7 +23,9 @@
             hint="{column name} will be replaced by column value"
             class="mb-1"
           ></v-textarea>
-          <v-btn type="submit" color="primary">Save changes</v-btn>
+          <div class="mt-5">
+            <v-btn type="submit" color="primary">Save changes</v-btn>
+          </div>
         </v-form>
       </v-expansion-panel-content>
     </v-expansion-panel>
@@ -45,7 +47,9 @@
             v-model="deactivationCode"
             class="mb-1"
           ></v-text-field>
-          <v-btn type="submit" color="error">Deactivate current event</v-btn>
+          <div class="mt-5">
+            <v-btn type="submit" color="error">Deactivate current event</v-btn>
+          </div>
         </v-form>
       </v-expansion-panel-content>
     </v-expansion-panel>
@@ -65,12 +69,22 @@ export default {
     }
   },
   methods: {
-    saveChanges() {
-      this.$store.dispatch('event/updateEvent', this.event);
+    async saveChanges() {
+      const resp = await this.$store.dispatch('event/updateEvent', this.event);
+      if (resp === true) {
+        window.location.reload(true);
+      } else {
+        alert(resp);
+      }
     },
-    deactivate() {
+    async deactivate() {
       if (confirm("Are you sure want to delete event " + this.event.name+ "?")) {
-        this.$store.dispatch('event/deleteEvent', this.event);
+        const resp = await this.$store.dispatch('event/deleteEvent', this.event);
+        if (resp === true) {
+          window.location.reload(true);
+        } else {
+          alert(resp);
+        }
       }
     }
   },

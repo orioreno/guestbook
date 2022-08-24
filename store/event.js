@@ -14,7 +14,7 @@ export const mutations = {
 
 export const actions = {
   async loadEvents(state) {
-    var response = await this.$axios.$get('event.php');
+    const response = await this.$axios.$get('event.php');
     if (response.code == 200) {
       this.commit('event/setList', response.data);
       response.data.forEach((row, index) => {
@@ -29,50 +29,34 @@ export const actions = {
 
   async changeSelected(state, {_id}) {
     if (_id) {
-      var response = await this.$axios.$patch('event.php', {id: _id});
-      if (response.code == 200) {
-        window.location.reload(true);
-      } else {
-        alert(response.message);
-      }
+      const response = await this.$axios.$patch('event.php', {id: _id});
+      return response.code == 200 ? true : response.message;
     }
+    return 'Unable to change event';
   },
 
   async addEvent(state, name) {
     if (name) {
-      var response = await this.$axios.$post('event.php', {name: name});
-      if (response.code == 200) {
-        window.location.reload(true);
-      } else {
-        alert(response.message);
-      }
+      const response = await this.$axios.$post('event.php', {name: name});
+      return response.code == 200 ? true : response.message;
     }
+    return 'Please specify name';
   },
 
   async updateEvent(state, event) {
     if (event._id) {
-      var response = await this.$axios.$put('event.php', event);
-      if (response.code == 200) {
-        window.location.reload(true);
-      } else {
-        alert(response.message);
-      }
-    } else {
-      alert('No event selected');
+      const response = await this.$axios.$put('event.php', event);
+      return response.code == 200 ? true : response.message;
     }
+    return 'No event selected';
   },
 
 
   async deleteEvent(state, {_id}) {
     if (_id) {
-      var response = await this.$axios.$delete('event.php?id='+_id);
-      if (response.code == 200) {
-        window.location.reload(true);
-      } else {
-        alert(response.message);
-      }
-    } else {
-      alert('No event selected');
+      const response = await this.$axios.$delete('event.php?id='+_id);
+      return response.code == 200 ? true : response.message;
     }
+    return 'No event selected';
   }
 }
