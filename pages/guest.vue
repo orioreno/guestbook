@@ -390,25 +390,7 @@ export default {
     showQr(guest) {
       this.$refs.qrcode.innerHTML = '';
       this.qrData = guest;
-      var options = {
-        text: this.qrData._checkin_code,
-        title: this.qrData.name,
-        titleTop: 15,
-        titleFont: "bold 16px sans-serif",
-        titleColor: "#000000",
-        titleBackgroundColor: "#ffffff",
-        titleHeight: 50,
-        subTitle: this.qrData._checkin_code,
-        subTitleFont: "14px sans-serif",
-        subTitleColor: "#000000",
-        subTitleTop: 35,
-        width: 400,
-        height: 400,
-        colorDark : "#000000",
-        colorLight : "#ffffff",
-      }
-      // Create new QRCode Object
-      this.$createQR(this.$refs.qrcode, options);
+      this.$createQR(this.$refs.qrcode, this.qrData._checkin_code, this.qrData.name, this.qrData._checkin_code);
       this.qrDialog = true;
     },
     downloadQr() {
