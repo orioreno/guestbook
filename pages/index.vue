@@ -64,7 +64,26 @@
       </div>
     </div>
     <v-card class="mb-3">
-      <v-card-title class="text-center">
+      <v-card-title class="text-center d-block">
+        Check In Timeline
+      </v-card-title>
+      <v-card-text>
+          <v-sparkline
+            :labels="timeline.labels"
+            :value="timeline.values"
+            label-size="2.2"
+            color="white"
+            :gradient="['#F44336', '#3F51B5']"
+            gradient-direction="left"
+            show-labels
+            padding="10"
+            smooth="15"
+            fill
+          ></v-sparkline>
+      </v-card-text>
+    </v-card>
+    <v-card class="mb-3">
+      <v-card-title class="text-center d-block">
         Not checked in yet
       </v-card-title>
       <v-card-subtitle>
@@ -90,7 +109,7 @@
       </v-card-text>
     </v-card>
     <v-card class="mb-3">
-      <v-card-title class="text-center">
+      <v-card-title class="text-center d-block">
         Have checked in
       </v-card-title>
       <v-card-subtitle>
@@ -169,6 +188,10 @@
     </v-dialog>
   </div>
 </template>
+
+<style>
+</style>
+
 <script>
 export default {
   name: "IndexPage",
@@ -189,16 +212,6 @@ export default {
     async loadGuests() {
       await this.$store.dispatch("guest/loadGuests");
       this.last_update = this.$moment().format("Y-MM-DD HH:mm:ss");
-    },
-    async manualCheckIn(guest) {
-      if (confirm("Manual check in for " + guest.name + " (" + guest._checkin_code + "). Proceed?")) {
-          let checkin = await this.$store.dispatch("guest/checkIn", { checkin_code: guest._checkin_code, manual: true });
-          console.log(checkin);
-          if (checkin.success !== true) {
-              alert(checkin.message);
-          }
-          this.loadGuests();
-      }
     },
     showHistory(item) {
       this.historyDialog = true;
@@ -286,6 +299,34 @@ export default {
       });
       return columns;
     },
+    timeline() {
+      let data = {
+        values: [],
+        labels: []
+      };
+
+      if (this.checkin_log.length > 0) {
+        const logs = [...this.checkin_log].reverse();
+
+        const firstTime = logs[0].time - 60;
+        const lastTime = logs[logs.length - 1].time + 60;
+        const interval = lastTime - firstTime;
+        const numOfSection = 10;
+        const increment = interval/numOfSection;
+        for (let i = 0; i <= numOfSection; i++) {
+          const from = firstTime + ((i-1) * increment);
+          const until = firstTime + (i * increment);
+          data.labels[i] = this.$moment.unix(until).format('YY MMM D HH:mm');
+          data.values[i] = logs.reduce((total, row) => {
+            if (row.time >= from && row.time < until)
+              total++;
+            return total;
+          }, 0);
+        }
+      }
+
+      return data;
+    }
   },
 }
 </script>

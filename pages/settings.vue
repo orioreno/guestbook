@@ -154,8 +154,9 @@
 
 <script>
 export default {
+  name: "SettingsPage",
   head: {
-    title: 'Settings'
+    title: "Settings"
   },
   data() {
     return {

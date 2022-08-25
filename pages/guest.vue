@@ -56,12 +56,12 @@
           <v-list>
             <v-list-item
               link
-              @click.stop="generateXLSX">
+              @click.stop="guestListXLSX">
               <v-list-item-title>Guest list (XLSX)</v-list-item-title>
             </v-list-item>
             <v-list-item
               link
-              @click.stop="generateXLSX">
+              @click.stop="guestCheckinXLSX">
               <v-list-item-title>Guests and check in histories (XLSX)</v-list-item-title>
             </v-list-item>
             <v-list-item
@@ -83,12 +83,11 @@
       </v-card-subtitle>
       <v-data-table
         id="datatable"
-        :headers="headers"
+        :headers="headersTable"
         :items="guests"
         :search="search"
         sort-by="name"
         :loading="loading"
-        :multi-sort="true"
         loading-text="Loading data"
       >
         <template v-slot:item.actions="{ item }">
@@ -113,7 +112,7 @@
               class="mr-2"
               @click="showHistory(item)"
               title="Show check in history"
-              v-if="!item._checkin_time"
+              v-if="item._checkin_time"
             >
               mdi-history
           </v-icon>
@@ -264,7 +263,6 @@
               <div v-for="(header, idx) in headers"
                   v-bind:key = "idx">
                 <v-text-field
-                  v-if = "header.additional !== true"
                   :label="header.text"
                   :rules="header.value == 'name' ? [v => !!v || 'Event name is required'] : []"
                   v-model="guestFormData[header.value]"
@@ -435,7 +433,7 @@ export default {
         this.savingGuest = false;
       }
     },
-    async generateXLSX() {
+    async guestListXLSX() {
       this.downloading = true;
       var data = [];
       // add header row
@@ -459,6 +457,52 @@ export default {
       this.$xlsx.utils.book_append_sheet(wb, ws, "Sheet1");
       this.downloading = false;
       return this.$xlsx.writeFile(wb, this.$store.state.event.selected.name + " guests list.xlsx");
+    },
+    async guestCheckinXLSX() {
+      this.downloading = true;
+      var data = [];
+      // add header row
+      let headerRow = [];
+      for (let h of this.headers) {
+        if (h.download !== false) {
+          headerRow.push(h.text);
+        }
+      }
+      headerRow.push('Check In Code');
+      headerRow.push('Check In Time');
+      headerRow.push('Check In Manual');
+      data.push(headerRow);
+      // add data rows
+      for (let g of this.guests) {
+        if (g._checkin_log) {
+          for (let idx in g._checkin_log) {
+            let row = [];
+            for (let h of this.headers) {
+              if (idx == 0) {
+                row.push(g[h.value]);
+              } else {
+                row.push('');
+              }
+            }
+            row.push(idx == 0 ? g['_checkin_code'] : '');
+            row.push(this.$moment.unix(g._checkin_log[idx].time).format('Y-MM-DD HH:mm:ss'));
+            row.push(g._checkin_log[idx].manual);
+            data.push(row);
+          }
+        } else {
+          let row = [];
+          for (let h of this.headers) {
+            row.push(g[h.value]);
+          }
+          row.push(g['_checkin_code']);
+          data.push(row);
+        }
+      }
+      var wb = this.$xlsx.utils.book_new();
+      var ws = this.$xlsx.utils.aoa_to_sheet(data);
+      this.$xlsx.utils.book_append_sheet(wb, ws, "Sheet1");
+      this.downloading = false;
+      return this.$xlsx.writeFile(wb, this.$store.state.event.selected.name + " guests check in.xlsx");
     },
     showQr(guest) {
       this.$refs.qrcode.innerHTML = '';
@@ -515,9 +559,7 @@ export default {
     async saveGuest() {
       let data = {};
       for (let header of this.headers) {
-        if (header.additional !== true && this.guestFormData[header.value]) {
-          data[header.value] = this.guestFormData[header.value];
-        }
+        data[header.value] = this.guestFormData[header.value];
       }
 
       if (data) {
@@ -584,22 +626,33 @@ export default {
   },
   computed: {
     guests() {
-      return [...this.$store.state.guest.list];
+      var data = [...this.$store.state.guest.list];
+      for (let row of data) {
+        if (row._checkin_log) {
+          row._checkin_time = this.$moment.unix(row._checkin_log[0].time).format("Y-MM-DD HH:mm:ss");
+        }
+      }
+      return data;
+
     },
     headers() {
-      var columns = [...this.$store.state.guest.columns];
+      return [...this.$store.state.guest.columns];
+    },
+    headersTable() {
+      let columns = [...this.headers];
       if (columns.length > 0) {
         columns.push({
           text: "Check In Code",
           value: "_checkin_code",
-          additional: true
+        });
+        columns.push({
+          text: "Last Check In Time",
+          value: "_checkin_time",
         });
         columns.push({
           text: "Actions",
           value: "actions",
           sortable: false,
-          download: false,
-          additional: true
         });
       }
       return columns;

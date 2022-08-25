@@ -58,7 +58,7 @@
     background-color: rgba(244, 67, 54, 0.5);
   }
   #btnFullscreen {
-    opacity:0.3;
+    opacity:0.5;
     position :fixed;
     right:2em;
     bottom:2em;
@@ -75,6 +75,10 @@
 
 <script>
 export default {
+  name: "ScanPage",
+  head: {
+    title: "Scan"
+  },
   data() {
     return {
       typed: '',
