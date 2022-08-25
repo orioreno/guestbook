@@ -129,9 +129,10 @@ export default {
       }
     }
   },
-  created() {
-    this.$store.commit("navbar/loadLocalSettings");
-    this.$store.dispatch("event/loadEvents");
+  async created() {
+    await this.$store.commit("navbar/loadLocalSettings");
+    await this.$store.dispatch("event/loadSelected");
+    await this.$store.dispatch("event/loadEvents");
   },
   computed: {
     drawer: {
@@ -157,9 +158,11 @@ export default {
       return this.$store.state.event.list;
     },
     selectedEvent() {
-      return this.$store.state.event.selected ?? {};
+      let selected = this.$store.state.event.selected ?? {};
+      this.$store.commit('navbar/setTitle', selected.name);
+      return selected;
     }
   },
-  components: { CreateEventDialog, CreateEventDialog }
+  components: { CreateEventDialog }
 }
 </script>

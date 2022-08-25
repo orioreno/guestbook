@@ -5,11 +5,19 @@ class EventModel extends Model{
   }
 
   public function getAll() {
-    return $this->db->findAll();
+    return $this->db
+      ->createQueryBuilder()
+      ->select(['name', 'selected'])
+      ->getQuery()
+      ->fetch();
   }
 
   public function selected() {
     return $this->db->findOneBy(['selected', '=', true]);
+  }
+
+  public function getRow($id) {
+    return $this->db->findById($id);
   }
 
   public function change($id) {

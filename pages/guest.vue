@@ -61,6 +61,11 @@
             </v-list-item>
             <v-list-item
               link
+              @click.stop="generateXLSX">
+              <v-list-item-title>Guests and check in histories (XLSX)</v-list-item-title>
+            </v-list-item>
+            <v-list-item
+              link
               @click.stop="downloadQr">
               <v-list-item-title>Check in QR codes (ZIP)</v-list-item-title>
             </v-list-item>
@@ -97,6 +102,24 @@
           <v-icon
             small
             class="mr-2"
+            @click="manualCheckIn(item)"
+            title="Manual check in"
+            v-if="!item._checkin_time"
+          >
+            mdi-account-check
+          </v-icon>
+          <v-icon
+              small
+              class="mr-2"
+              @click="showHistory(item)"
+              title="Show check in history"
+              v-if="!item._checkin_time"
+            >
+              mdi-history
+          </v-icon>
+          <v-icon
+            small
+            class="mr-2"
             @click="openGuestForm(item)"
           >
             mdi-pencil
@@ -108,10 +131,12 @@
           >
             mdi-delete
           </v-icon>
+
         </template>
       </v-data-table>
     </v-card>
 
+    <!-- Import dialog -->
     <v-dialog
       v-model="importDialog"
       max-width="400"
@@ -146,6 +171,7 @@
       </v-card>
     </v-dialog>
 
+    <!-- Clone dialog -->
     <v-dialog
       v-model="cloneDialog"
       max-width="400"
@@ -197,6 +223,7 @@
       </v-form>
     </v-dialog>
 
+    <!-- QR Preview dialog -->
     <v-dialog
         v-model="qrDialog"
         max-width="500"
@@ -215,6 +242,7 @@
       </v-card>
     </v-dialog>
 
+    <!-- Guest form dialog -->
     <v-dialog
         v-model="guestFormDialog"
         :eager="true"
@@ -264,6 +292,49 @@
         </v-card>
       </v-form>
     </v-dialog>
+
+    <!-- History dialog -->
+    <v-dialog
+      v-model="historyDialog"
+      :eager="true"
+      max-width="400"
+    >
+      <v-card>
+        <v-card-title>
+          {{ historyData.name }}
+        </v-card-title>
+        <v-card-subtitle>
+          {{ historyData._checkin_code }}
+        </v-card-subtitle>
+        <v-card-text>
+          <v-simple-table
+              fixed-header
+            >
+              <template v-slot:default>
+                <thead>
+                  <tr>
+                    <th class="text-left">
+                      Time
+                    </th>
+                    <th class="text-left">
+                      Manual Check In
+                    </th>
+                  </tr>
+                </thead>
+                <tbody v-if="historyData._checkin_log">
+                  <tr
+                    v-for="item in historyData._checkin_log"
+                    :key="item._id"
+                  >
+                    <td>{{ $moment.unix(item.time).format('Y-MM-DD HH:mm:ss') }}</td>
+                    <td><v-icon v-if="item.manual">mdi-check-circle</v-icon></td>
+                  </tr>
+                </tbody>
+              </template>
+            </v-simple-table>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -294,7 +365,9 @@ export default {
       cloneDialog: false,
       cloneValid: false,
       cloneEventId: null,
-      cloneRegenerate: false
+      cloneRegenerate: false,
+      historyDialog: false,
+      historyData: {}
     };
   },
   methods: {
@@ -486,6 +559,24 @@ export default {
         }
         this.savingGuest = false;
       }
+    },
+    async manualCheckIn(guest) {
+      if (confirm("Manual check in for " + guest.name + " (" + guest._checkin_code + "). Proceed?")) {
+        let checkin = await this.$store.dispatch('guest/checkIn', { checkin_code: guest._checkin_code, manual: true });
+        console.log(checkin);
+        if (checkin.success !== true) {
+          alert(checkin.message);
+        }
+        this.loadGuests();
+      }
+    },
+    showHistory(item) {
+      this.historyDialog = true;
+      this.historyData = item;
+    },
+    showHistory(item) {
+      this.historyDialog = true;
+      this.historyData = item;
     }
   },
   created() {

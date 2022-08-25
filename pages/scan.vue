@@ -1,33 +1,85 @@
 <template>
   <div>
-      <div class=" d-flex align-items-center justify-content-center" :class="success === true ? 'bg-success' : (success === false ? 'bg-danger' : '')" style="height:100vh">
-          <div class="text-white text-center" v-if="success === null">
-              <h2>Scan your QR code or type your check in code</h2>
-              <div class="mt-3" style="min-width:600px">
-                  <h1 class="bg-light bg-opacity-25 rounded p-3 text-uppercase display-1">
-                      {{ typed ? typed : '&nbsp;' }}
-                  </h1>
-                  <div style="height:20px">
-                      {{ clearTypedCounter > 0 && clearTypedCounter <= 3 ? 'Clearing in ' + clearTypedCounter + ' second...' : '' }}
-                  </div>
+    <div id="scan" v-if="event" :style="{'background-image': 'url(' + (this.event.checkin_background_image ?? '') + ')'}">
+      <audio ref="successAudio" v-if="event.checkin_success_audio">
+        <source :src="event.checkin_success_audio">
+      </audio>
+      <audio ref="failedAudio" v-if="event.checkin_failed_audio">
+        <source :src="event.checkin_failed_audio">
+      </audio>
+      <div class="d-flex justify-center align-center" style="height:100vh;" :class="checkin_background">
+        <div class="text-center">
+            <!-- SUCCESS -->
+            <div v-if="checkinSuccess === true">
+              <h1 class="display-3" v-html="checkinData._checkin_message.replace(/(?:\r\n|\r|\n)/g, '<br>')"></h1>
+              <div class="mt-5" style="opacity:0.75">
+                {{ $moment.unix(checkinData._checkin_log[0].time).format('D MMM Y HH:mm:ss') }}
               </div>
-          </div>
-          <h1 v-else class="text-center display-2" v-html="message"></h1>
-      </div>
+            </div>
 
-      <div class="sticky-bottom w-100 text-center p-3 text-white" v-if="!fullscreen">
-          <button type="button" class="btn btn-primary btn-sm" @click.stop="enterFullscreen">Set to fullscreen</button>
+            <!-- FAILED -->
+            <div v-else-if="checkinSuccess == false">
+              <h1 class="text-center display-3">{{ checkinData }}</h1>
+            </div>
+
+            <!-- SCAN -->
+            <div v-else>
+                <h1 class="display-1 mb-5">Scan QR code or type check in code</h1>
+                <div>
+                    <h1 class="bg-light bg-opacity-25 rounded p-3 text-uppercase display-4">
+                        {{ typed ? typed : '&nbsp;' }}
+                    </h1>
+                </div>
+                <div class="mt-3" style="opacity:0.75;font-size:0.8em">
+                    {{ clearTypedCounter > 0 && clearTypedCounter <= 3 ? 'Clearing in ' + clearTypedCounter + ' second...' : '&nbsp;' }}
+                </div>
+            </div>
+        </div>
+        <v-btn
+          fab
+          large
+          dark
+          @click.stop="toggleFullscreen"
+          id="btnFullscreen"
+          :title="fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'"
+        >
+          <v-icon>{{ fullscreen ? 'mdi-fullscreen-exit' : 'mdi-fullscreen' }}</v-icon>
+        </v-btn>
       </div>
+    </div>
   </div>
 </template>
+
+<style scoped>
+  .bg-success {
+    background-color: rgba(76, 175, 80, 0.5);
+  }
+  .bg-danger {
+    background-color: rgba(244, 67, 54, 0.5);
+  }
+  #btnFullscreen {
+    opacity:0.3;
+    position :fixed;
+    right:2em;
+    bottom:2em;
+  }
+  #btnFullscreen:hover {
+    opacity:1;
+  }
+  #scan {
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+  }
+</style>
 
 <script>
 export default {
   data() {
     return {
       typed: '',
-      success: null,
-      message: '',
+      checkinSuccess: null,
+      checkinData: null,
       fullscreen: false,
       clearTyped: null,
       clearTypedCounter: 0,
@@ -35,14 +87,22 @@ export default {
     }
   },
   methods: {
-    showMessage(success, message) {
+    showMessage(success, data) {
       clearTimeout(this.successTimeout);
-      this.success = success;
-      this.message = message;
+      this.checkinSuccess = success;
+      this.checkinData = data;
     },
     onKeydown(e) {
+      if (this.$refs.successAudio) {
+        this.$refs.successAudio.pause();
+        this.$refs.successAudio.currentTime = 0;
+      }
+      if (this.$refs.failedAudio) {
+        this.$refs.failedAudio.pause();
+        this.$refs.failedAudio.currentTime = 0;
+      }
       var startCounter = true;
-      this.success = null;
+      this.checkinSuccess = null;
       if (e.keyCode == 13 && this.typed.length > 0) {
         startCounter = false;
         this.submit(this.typed);
@@ -68,48 +128,67 @@ export default {
       }
     },
     async submit(code) {
-      let checkin = await this.$store.dispatch('attendance/checkIn', code);
-      this.showMessage(checkin.success, checkin.message);
+      let checkin = await this.$store.dispatch('guest/checkIn', {'checkin_code': code});
+      this.showMessage(checkin.success, checkin.data);
       this.typed = "";
     },
-    enterFullscreen() {
-        this.$store.commit('navbar/toggleDrawer', false);
-        var element = document.querySelector("#app");
-
-        element.requestFullscreen()
-        .then(() => {
-            this.fullscreen = true;
-            // element has entered fullscreen mode successfully
-        })
-        .catch(function(error) {
-            // element could not enter fullscreen mode
-            // error message
-            console.log(error.message);
-        });
-    },
-    exitFullscreen() {
-        if (document.fullscreenElement) {
-            document.exitFullscreen()
-                .then(() => this.fullscreen = false)
-                .catch((err) => console.error(err))
-        }
+    async toggleFullscreen(execute) {
+      if (this.fullscreen) {
+        await document.exitFullscreen();
+      } else {
+        var element = document.querySelector("#scan");
+        await element.requestFullscreen();
+      }
+      document.activeElement.blur();
     }
   },
   watch: {
-    success() {
-      if (this.success !== null) {
+    checkinSuccess() {
+      if (this.checkinSuccess !== null) {
+        let duration = 3; // in second
+
+        if (this.checkinSuccess && this.$refs.successAudio) {
+            duration = this.$refs.successAudio.duration;
+            this.$refs.successAudio.play();
+        }
+
+        if (!this.checkinSuccess && this.$refs.failedAudio) {
+          duration = this.$refs.failedAudio.duration;
+          this.$refs.failedAudio.play();
+        }
+
         this.successTimeout = setTimeout(() => {
-          this.success = null;
+          this.checkinSuccess = null;
           this.message = '';
-        }, 3000);
+        }, duration*1000);
       }
     }
   },
-  mounted:function() {
-    window.addEventListener( "keydown", this.onKeydown );
-    document.onclick = (event) => {
-      this.exitFullscreen();
-    };
+  mounted() {
+    addEventListener( "keydown", this.onKeydown );
+    addEventListener('fullscreenchange', (e) => {
+      this.fullscreen = !this.fullscreen;
+    });
+  },
+  computed: {
+    event() {
+      return this.$store.state.event.selected;
+    },
+    bodyStyle() {
+      var style = {};
+      if (this.event) {
+        style['background-image'] = "url(" + this.event.checkin_background_image + ")";
+      }
+      return style;
+    },
+    checkin_background() {
+      if (this.checkinSuccess === true) {
+        return 'bg-success';
+      } else if (this.checkinSuccess === false) {
+        return 'bg-danger';
+      }
+      return '';
+    }
   }
 }
 </script>

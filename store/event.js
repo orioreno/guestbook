@@ -9,7 +9,7 @@ export const mutations = {
   },
   setSelected(state, value) {
     state.selected = value;
-  }
+  },
 }
 
 export const actions = {
@@ -17,13 +17,6 @@ export const actions = {
     const response = await this.$axios.$get('event.php');
     if (response.code == 200) {
       this.commit('event/setList', response.data);
-      response.data.forEach((row, index) => {
-        if (row.selected) {
-          row.index = index;
-          this.commit('event/setSelected', row);
-          this.commit('navbar/setTitle', row.name);
-        }
-      })
     }
   },
 
@@ -58,5 +51,12 @@ export const actions = {
       return response.code == 200 ? true : response.message;
     }
     return 'No event selected';
+  },
+
+  async loadSelected(state) {
+    const response = await this.$axios.$get('event.php?selected');
+    if (response.code == 200) {
+      this.commit('event/setSelected', response.data);
+    }
   }
 }

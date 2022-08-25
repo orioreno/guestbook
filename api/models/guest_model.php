@@ -85,10 +85,6 @@ class GuestModel extends Model{
     return $this->db->deleteById($id);
   }
 
-  public function getRowByCode($checkincode) {
-    return $this->db->findOneBy(['_checkin_code', '=', strtoupper($checkincode)]);
-  }
-
   public function clone($id, $regenerate = false) {
     $this->drop();
     $this->initDb();
@@ -96,12 +92,24 @@ class GuestModel extends Model{
     $dbSource = $this->use($id, "guest");
     $dataSource = $dbSource->findAll();
     foreach ($dataSource as &$row) {
-      if (isset($row['_checkin_time'])) unset($row['_checkin_time']);
+      if (isset($row['_checkin_log'])) unset($row['_checkin_log']);
       if (isset($row['_id'])) unset($row['_id']);
       if ($regenerate) $row = $this->generate_checkin_code(($row));
       $this->db->insert($row);
     }
 
     return true;
+  }
+
+  public function checkin($checkincode, $manual = false) {
+    $guest = $this->db->findOneBy(['_checkin_code', '=', strtoupper($checkincode)]);
+    if (isset($guest['_id'])) {
+      if (!isset($guest['_checkin_log'])) $guest['_checkin_log'] = [];
+      $guest['_checkin_log'][] = ['time' => time(), 'manual' => $manual];
+      if ($this->db->update($guest)) {
+        return $guest;
+      }
+    }
+    return false;
   }
 }

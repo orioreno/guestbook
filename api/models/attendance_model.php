@@ -19,7 +19,7 @@ class AttendanceModel extends Model {
   }
 
   public function getAll() {
-    return $this->db->findAll();
+    return $this->db->findAll(["time" => 'desc']);
   }
 
   public function insert($guest_id, $time, $manual = false) {

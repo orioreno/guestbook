@@ -10,7 +10,7 @@
         <v-card class="mb-3">
           <v-card-title class="d-block text-center">Check In Progress</v-card-title>
           <v-card-subtitle class="text-center">
-            {{ Object.keys(guestAttendances).length }} of {{ Object.keys(guests).length }} guest(s) have checked in
+            {{ totalCheckin }} of {{ guests.length }} guest(s) have checked in
           </v-card-subtitle>
           <v-card-text class="py-8 text-center">
             <v-progress-circular
@@ -20,7 +20,7 @@
                 :value="checkinPercent"
                 :color="progressColor"
               >
-              {{ checkinPercent }}%
+              {{ checkinPercent.toFixed(2) }}%
             </v-progress-circular>
           </v-card-text>
         </v-card>
@@ -49,12 +49,12 @@
                 </thead>
                 <tbody>
                   <tr
-                    v-for="item in attendances.slice(0,10)"
+                    v-for="item in checkin_log.slice(0,10)"
                     :key="item._id"
                   >
                     <td>{{ $moment.unix(item.time).format('Y-MM-DD HH:mm:ss') }}</td>
-                    <td>{{ guests[item.guest_id] ? guests[item.guest_id].name : '' }}</td>
-                    <td>{{ guests[item.guest_id] ? guests[item.guest_id]._checkin_code : '' }}</td>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.checkin_code }}</td>
                   </tr>
                 </tbody>
               </template>
@@ -63,9 +63,9 @@
         </v-card>
       </div>
     </div>
-    <v-card>
+    <v-card class="mb-3">
       <v-card-title class="text-center">
-        Manual check in
+        Not checked in yet
       </v-card-title>
       <v-card-subtitle>
         <v-text-field
@@ -79,30 +79,45 @@
       <v-card-text>
         <v-data-table
           :headers="headers"
-          :items="Object.values(guests)"
+          :items="guests.filter((val) => { return !val._checkin_time})"
           :search="search"
           :loading="loading"
           sort-by="_checkin_time"
           :sort-desc="true"
-          :multi-sort="true"
+          loading-text="Loading data"
+        >
+        </v-data-table>
+      </v-card-text>
+    </v-card>
+    <v-card class="mb-3">
+      <v-card-title class="text-center">
+        Have checked in
+      </v-card-title>
+      <v-card-subtitle>
+        <v-text-field
+          v-model="search"
+          append-icon="mdi-magnify"
+          label="Search"
+          single-line
+          hide-details
+        ></v-text-field>
+      </v-card-subtitle>
+      <v-card-text>
+        <v-data-table
+          :headers="headersCheckIn"
+          :items="guests.filter((val) => { return val._checkin_time})"
+          :search="search"
+          :loading="loading"
+          sort-by="_checkin_time"
+          :sort-desc="true"
           loading-text="Loading data"
         >
           <template v-slot:item.actions="{ item }">
             <v-icon
               small
               class="mr-2"
-              @click="manualCheckIn(item)"
-              title="Manual check in"
-              v-if="!item._checkin_time"
-            >
-              mdi-account-check
-            </v-icon>
-            <v-icon
-              small
-              class="mr-2"
               @click="showHistory(item)"
               title="Show check in history"
-              v-if="item._checkin_time"
             >
               mdi-history
             </v-icon>
@@ -110,6 +125,7 @@
         </v-data-table>
       </v-card-text>
     </v-card>
+
     <v-dialog
       v-model="historyDialog"
       :eager="true"
@@ -137,9 +153,9 @@
                     </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody v-if="historyData._checkin_log">
                   <tr
-                    v-for="item in historyData.attendance"
+                    v-for="item in historyData._checkin_log"
                     :key="item._id"
                   >
                     <td>{{ $moment.unix(item.time).format('Y-MM-DD HH:mm:ss') }}</td>
@@ -154,38 +170,34 @@
   </div>
 </template>
 <script>
-
 export default {
   name: "IndexPage",
   head: {
-    title: 'Dashboard'
+    title: "Dashboard"
   },
-  data () {
+  data() {
     return {
       loading: false,
-      search: '',
+      search: "",
       last_update: null,
       refresh_rate: 5,
       historyDialog: false,
       historyData: {}
-    }
+    };
   },
   methods: {
     async loadGuests() {
-      await this.$store.dispatch('guest/loadGuests');
-    },
-    async loadAttendance() {
-      await this.$store.dispatch('attendance/loadAttendances');
-      this.last_update = this.$moment().format('Y-MM-DD HH:mm:ss');
+      await this.$store.dispatch("guest/loadGuests");
+      this.last_update = this.$moment().format("Y-MM-DD HH:mm:ss");
     },
     async manualCheckIn(guest) {
       if (confirm("Manual check in for " + guest.name + " (" + guest._checkin_code + "). Proceed?")) {
-        let checkin = await this.$store.dispatch('attendance/checkIn', { checkin_code: guest._checkin_code, manual: true });
-        console.log(checkin);
-        if (checkin.success !== true) {
-          alert(checkin.message);
-        }
-        this.loadAttendance();
+          let checkin = await this.$store.dispatch("guest/checkIn", { checkin_code: guest._checkin_code, manual: true });
+          console.log(checkin);
+          if (checkin.success !== true) {
+              alert(checkin.message);
+          }
+          this.loadGuests();
       }
     },
     showHistory(item) {
@@ -195,65 +207,85 @@ export default {
   },
   created() {
     this.loadGuests();
-    this.loadAttendance();
-    setInterval(() => this.loadAttendance(), this.refresh_rate * 1000);
+    setInterval(() => this.loadGuests(), this.refresh_rate * 1000);
   },
   computed: {
     guests() {
-      var data = {};
-      for (let row of this.$store.state.guest.list) {
-        if (this.guestAttendances[row._id]) {
-          row.attendance = this.guestAttendances[row._id];
-          row._checkin_time = this.$moment.unix(this.guestAttendances[row._id][0].time).format('Y-MM-DD HH:mm:ss');
+      var data = this.$store.state.guest.list;
+      for (let row of data) {
+        if (row._checkin_log) {
+          row._checkin_time = this.$moment.unix(row._checkin_log[0].time).format("Y-MM-DD HH:mm:ss");
         }
-        data[row._id] = row;
       }
       return data;
     },
-    attendances() {
-      return this.$store.state.attendance.list;
-    },
-    headers() {
-      var columns = [...this.$store.state.guest.columns];
-      columns.push({
-        text: 'Check In Code',
-        value: '_checkin_code'
-      });
-      columns.push({
-        text: 'Last Check In Time',
-        value: '_checkin_time'
-      });
-      columns.push({
-        text: 'Actions',
-        value: 'actions',
-        sortable: false
-      });
-      return columns;
-    },
-    guestAttendances() {
-      let data = {};
-      for (let row of this.attendances) {
-        if (!(row.guest_id in data)) data[row.guest_id] = [];
-        data[row.guest_id].push(row);
-      }
-      return data;
+    totalCheckin() {
+      return this.guests.reduce((total, row) => {
+        if (row._checkin_time)
+          total++;
+        return total;
+      }, 0);
     },
     checkinPercent() {
-      return this.guests.length > 0 ? Math.floor((Object.keys(this.guestAttendances).length / Object.keys(this.guests).length) * 100) : 0;
+      return this.guests.length > 0 ? (this.totalCheckin / this.guests.length) * 100 : 0;
+    },
+    checkin_log() {
+      var data = [];
+      for (let row of this.guests) {
+        if (row._checkin_log) {
+          for (let checkin of row._checkin_log) {
+            data.push({
+              "time": checkin.time,
+              "manual": checkin.manual,
+              "name": row.name,
+              "checkin_code": row._checkin_code
+            });
+          }
+        }
+      }
+      data.sort((a, b) => {
+        return b.time - a.time;
+      });
+      return data;
     },
     progressColor() {
       if (this.checkinPercent > 80) {
         return "green";
-      } else if (this.checkinPercent > 60) {
+      }
+      else if (this.checkinPercent > 60) {
         return "blue";
-      } else if (this.checkinPercent > 30) {
+      }
+      else if (this.checkinPercent > 30) {
         return "orange";
-      } else if (this.checkinPercent == 0) {
+      }
+      else if (this.checkinPercent == 0) {
         return "grey";
-      } else {
+      }
+      else {
         return "red";
       }
-    }
-  }
+    },
+    headers() {
+      var columns = [...this.$store.state.guest.columns];
+      columns.push({
+        text: "Check In Code",
+        value: "_checkin_code"
+      });
+      return columns;
+    },
+    headersCheckIn() {
+      let columns = [...this.headers];
+      columns.push({
+        text: "Last Check In Time",
+        value: "_checkin_time"
+      });
+      columns.push({
+        text: "Actions",
+        value: "actions",
+        sortable: false
+      });
+      return columns;
+    },
+  },
 }
 </script>
