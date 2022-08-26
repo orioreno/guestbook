@@ -26,8 +26,15 @@ class GuestAPI extends API {
 
   function put() {
     if (!empty($this->input)) {
-      if (($insert = $this->model->replace($this->input))) {
-        $this->response_success($insert);
+      if (isset($this->input['cloneEventId'])) {
+        if (($insert = $this->model->clone($this->input['cloneEventId'], isset($this->input['regenerate']) && $this->input['regenerate'] === true))) {
+          $this->response_success($insert);
+        }
+        $this->response_failed(500);
+      } else {
+        if (($insert = $this->model->replace($this->input))) {
+          $this->response_success($insert);
+        }
       }
       $this->response_failed(500);
     }
@@ -63,37 +70,6 @@ class GuestAPI extends API {
     }
     $this->response_failed(400);
   }
-
-  function clone() {
-    if (isset($this->input['cloneEventId'])) {
-      if (($insert = $this->model->clone($this->input['cloneEventId'], isset($this->input['regenerate']) && $this->input['regenerate'] === true))) {
-        $this->response_success($insert);
-      }
-      $this->response_failed(500);
-    }
-    $this->response_failed(400);
-  }
-
-  function checkin() {
-    if (isset($this->input['_checkin_code'])) {
-      $guest = $this->model->checkin($this->input['_checkin_code'], isset($this->input['manual']) ? $this->input['manual'] : false);
-      if (isset($guest['name'])) {
-        require_once "models/event_model.php";
-        $selectedEvent = (new EventModel())->selected();
-        $message = $guest['name'];
-        if (isset($selectedEvent['scan_message'])) {
-            $message = nl2br($selectedEvent['scan_message']);
-            foreach ($guest as $key => $value) {
-                $message = str_replace('{'.$key.'}', $value, $message);
-            }
-        }
-        $this->response_success($message);
-      }
-      $this->response_failed(500);
-    }
-    $this->response_failed(400);
-  }
-
 }
 
 $api = new GuestAPI();

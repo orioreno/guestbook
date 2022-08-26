@@ -1,6 +1,6 @@
 export const state = () => ({
   selected: null,
-  list: []
+  list: null
 })
 
 export const mutations = {
@@ -20,20 +20,20 @@ export const actions = {
     }
   },
 
-  async changeSelected(state, {_id}) {
+  async changeSelected(state, {_id, password}) {
     if (_id) {
-      const response = await this.$axios.$patch('event.php', {id: _id});
+      const response = await this.$axios.$patch('event.php', {_id: _id, password: password});
       return response.code == 200 ? true : response.message;
     }
     return 'Unable to change event';
   },
 
-  async addEvent(state, name) {
-    if (name) {
-      const response = await this.$axios.$post('event.php', {name: name});
+  async addEvent(state, {name, password}) {
+    if (name && password) {
+      const response = await this.$axios.$post('event.php', {name: name, password: password});
       return response.code == 200 ? true : response.message;
     }
-    return 'Please specify name';
+    return 'Please specify name and password';
   },
 
   async updateEvent(state, event) {
@@ -47,7 +47,7 @@ export const actions = {
 
   async deleteEvent(state, {_id}) {
     if (_id) {
-      const response = await this.$axios.$delete('event.php?id='+_id);
+      const response = await this.$axios.$delete('event.php?_id='+_id);
       return response.code == 200 ? true : response.message;
     }
     return 'No event selected';

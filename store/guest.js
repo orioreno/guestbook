@@ -60,12 +60,8 @@ export const actions = {
   },
 
   async cloneGuests(state, cloneEventId, regenerate) {
-    const response = await this.$axios.request({
-      'url': 'guest.php',
-      'method': 'clone',
-      'data': {cloneEventId: cloneEventId, regenerate: regenerate}
-    });
-    return response.code == 200 ? true : response.message;
+    const response = await this.$axios.put('guest.php', {cloneEventId: cloneEventId, regenerate: regenerate});
+    return response.data.code == 200 ? true : response.data.message;
   },
 
   async checkIn(state, {checkin_code, manual}) {

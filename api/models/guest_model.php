@@ -54,10 +54,6 @@ class GuestModel extends Model{
 
   public function drop() {
     $this->db->deleteStore();
-
-    require_once "attendance_model.php";
-    $attendance_model = new AttendanceModel();
-    $attendance_model->drop();
   }
 
   public function insert($data) {

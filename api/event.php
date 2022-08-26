@@ -17,8 +17,8 @@ class EventAPI extends API {
   }
 
   function post() {
-    if (isset($this->input['name'])) {
-      $insert = $this->model->insert($this->input['name']);
+    if (isset($this->input['name']) && isset($this->input['password'])) {
+      $insert = $this->model->insert($this->input['name'], $this->input['password']);
       if (is_string($insert)) {
         $this->response_failed(509, $insert);
       } else {
@@ -32,9 +32,14 @@ class EventAPI extends API {
   }
 
   function patch() {
-    if (isset($this->input['id'])) {
-      if ($this->model->change($this->input['id'])) {
-        $this->response_success();
+    if (isset($this->input['_id']) && isset($this->input['password'])) {
+      $event = $this->model->getRow($this->input['_id']);
+      if ($this->input['password'] == $event['password']) {
+        if ($this->model->change($event['_id'])) {
+          $this->response_success();
+        }
+      } else {
+        $this->response_failed(509, 'Invalid password');
       }
       $this->response_failed(500);
     }
@@ -56,7 +61,7 @@ class EventAPI extends API {
 
   function delete() {
     if (isset($_GET['id'])) {
-      if ($this->model->delete($_GET['id'])) {
+      if ($this->model->delete($_GET['_id'])) {
         $this->response_success();
       }
       $this->response_failed(500);

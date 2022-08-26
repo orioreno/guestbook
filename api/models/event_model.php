@@ -8,6 +8,7 @@ class EventModel extends Model{
     return $this->db
       ->createQueryBuilder()
       ->select(['name', 'selected'])
+      ->orderBy(['_id' => 'desc'])
       ->getQuery()
       ->fetch();
   }
@@ -38,12 +39,12 @@ class EventModel extends Model{
     return false;
   }
 
-  public function insert($eventName) {
-    $existing = $this->db->findOneBy(['name', '=', $eventName]);
+  public function insert($name, $password) {
+    $existing = $this->db->findOneBy(['name', '=', $name]);
     if ($existing) {
-      return 'Event '.$eventName.' already exist';
+      return 'Event '.$name.' already exist';
     }
-    return $this->db->insert(['name' => $eventName]);
+    return $this->db->insert(['name' => $name, 'password' => $password]);
   }
 
   public function update($data) {

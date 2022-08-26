@@ -25,10 +25,10 @@
             <!-- SCAN -->
             <div v-else>
                 <h1 class="display-1 mb-5">Scan QR code or type check in code</h1>
-                <div>
-                    <h1 class="bg-light bg-opacity-25 rounded p-3 text-uppercase display-4">
-                        {{ typed ? typed : '&nbsp;' }}
-                    </h1>
+                <div class="d-flex">
+                    <div v-for="i in charNum" v-bind:key="i" class="typed-character">
+                        {{ typed[i-1] ? typed[i-1] : '&nbsp;' }}
+                    </div>
                 </div>
                 <div class="mt-3" style="opacity:0.75;font-size:0.8em">
                     {{ clearTypedCounter > 0 && clearTypedCounter <= 3 ? 'Clearing in ' + clearTypedCounter + ' second...' : '&nbsp;' }}
@@ -71,13 +71,22 @@
     background-position: center;
     background-size: cover;
   }
+  .typed-character {
+    background-color: white;
+    text-align:center;
+    width:1em;
+    color: black;
+    margin: auto 5px;
+    border-radius:5px;
+    font-size:6em;
+  }
 </style>
 
 <script>
 export default {
   name: "ScanPage",
   head: {
-    title: "Scan"
+    title: "Scan",
   },
   data() {
     return {
@@ -87,7 +96,8 @@ export default {
       fullscreen: false,
       clearTyped: null,
       clearTypedCounter: 0,
-      successTimeout: null
+      successTimeout: null,
+      charNum: 6
     }
   },
   methods: {
@@ -110,11 +120,15 @@ export default {
       if (e.keyCode == 13 && this.typed.length > 0) {
         startCounter = false;
         this.submit(this.typed);
-      } else if (e.key.length == 1 && /[a-zA-Z0-9]/.test(e.key)) {
-        this.typed += e.key;
+      } else if (e.key.length == 1 && /[a-zA-Z0-9]/.test(e.key) && this.typed.length < this.charNum) {
+        this.typed += e.key.toUpperCase();
       } else if (e.keyCode == 8) {
         this.typed = this.typed.slice(0, -1);
       }
+
+      // if (this.typed.length >= 6) {
+      //   this.submit(this.typed.substring(0, 6));
+      // }
 
       this.clearTypedCounter = 0;
       if (startCounter) {

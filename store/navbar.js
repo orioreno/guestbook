@@ -1,7 +1,6 @@
 export const state = () => ({
   drawer: false,
   miniVariant: false,
-  title: '',
 })
 
 export const mutations = {
@@ -12,9 +11,6 @@ export const mutations = {
   toggleMiniVariant(state, value) {
     state.miniVariant = value ?? !state.miniVariant;
     if (!value) this.commit('navbar/saveLocalSettings');
-  },
-  setTitle(state, title) {
-    state.title = title;
   },
   saveLocalSettings(state) {
     var jsonData = {

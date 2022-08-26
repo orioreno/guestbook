@@ -65,12 +65,12 @@
     </div>
     <v-card class="mb-3">
       <v-card-title class="text-center d-block">
-        Check In Timeline
+        Check In Frequencies
       </v-card-title>
       <v-card-text>
           <v-sparkline
-            :labels="timeline.labels"
-            :value="timeline.values"
+            :labels="sparklineData.labels"
+            :value="sparklineData.values"
             label-size="2.2"
             color="white"
             :gradient="['#F44336', '#3F51B5']"
@@ -299,7 +299,7 @@ export default {
       });
       return columns;
     },
-    timeline() {
+    sparklineData() {
       let data = {
         values: [],
         labels: []
@@ -323,6 +323,9 @@ export default {
             return total;
           }, 0);
         }
+      } else {
+        data.values = [0, 0];
+        data.labels = ['Start', 'End'];
       }
 
       return data;
