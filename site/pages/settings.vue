@@ -111,6 +111,29 @@
                 </div>
               </div>
 
+              <div class="row">
+                <div class="col-lg-4 col-sm-6">
+                  <label>Font color</label>
+                  <v-color-picker v-model="event.font_color"></v-color-picker>
+                </div>
+                <div class="col-lg-4 col-sm-6">
+                  <label>Box input color</label>
+                  <v-color-picker v-model="event.box_input_color"></v-color-picker>
+                </div>
+                <div class="col-lg-4 col-sm-6">
+                  <label>Text input color</label>
+                  <v-color-picker v-model="event.text_input_color"></v-color-picker>
+                </div>
+                <div class="col-lg-4 col-sm-6">
+                  <label>Success overlay color</label>
+                  <v-color-picker v-model="event.success_overlay_color"></v-color-picker>
+                </div>
+                <div class="col-lg-4 col-sm-6">
+                  <label>Failed overlay color</label>
+                  <v-color-picker v-model="event.failed_overlay_color"></v-color-picker>
+                </div>
+              </div>
+
               <div class="mt-5">
                 <v-btn type="submit" color="primary">Save changes</v-btn>
               </div>
@@ -159,75 +182,79 @@
 <script>
 import PasswordVerification from '~/components/PasswordVerification.vue';
 export default {
-    name: "SettingsPage",
-    head: {
-        title: "Settings"
+  name: "SettingsPage",
+  head: {
+    title: "Settings"
+  },
+  data() {
+    return {
+      panel: 0,
+      valid: false,
+      deactivationCode: "",
+      passwordVisible: false,
+      fileBackgroundImage: null,
+      fileSuccessAudio: null,
+      fileFailedAudio: null,
+      tempBackgroundImage: null,
+      tempSuccessAudio: null,
+      tempFailedAudio: null,
+    };
+  },
+  methods: {
+    async saveChanges() {
+      if (this.tempBackgroundImage)
+        this.event.checkin_background_image = this.tempBackgroundImage;
+      if (this.tempSuccessAudio)
+        this.event.checkin_success_audio = this.tempSuccessAudio;
+      if (this.tempFailedAudio)
+        this.event.checkin_failed_audio = this.tempFailedAudio;
+      const resp = await this.$store.dispatch("event/updateEvent", this.event);
+      if (resp === true) {
+        window.location.reload(true);
+      }
+      else {
+        alert(resp);
+      }
     },
-    data() {
-        return {
-            panel: 0,
-            valid: false,
-            deactivationCode: "",
-            passwordVisible: false,
-            fileBackgroundImage: null,
-            fileSuccessAudio: null,
-            fileFailedAudio: null,
-            tempBackgroundImage: null,
-            tempSuccessAudio: null,
-            tempFailedAudio: null
-        };
-    },
-    methods: {
-        async saveChanges() {
-            if (this.tempBackgroundImage)
-                this.event.checkin_background_image = this.tempBackgroundImage;
-            if (this.tempSuccessAudio)
-                this.event.checkin_success_audio = this.tempSuccessAudio;
-            if (this.tempFailedAudio)
-                this.event.checkin_failed_audio = this.tempFailedAudio;
-            const resp = await this.$store.dispatch("event/updateEvent", this.event);
-            if (resp === true) {
-                window.location.reload(true);
-            }
-            else {
-                alert(resp);
-            }
-        },
-        async deactivate() {
-            if (confirm("Are you sure want to delete event " + this.event.name + "?")) {
-                const resp = await this.$store.dispatch("event/deleteEvent", this.event);
-                if (resp === true) {
-                    window.location.reload(true);
-                }
-                else {
-                    alert(resp);
-                }
-            }
-        },
-        async getEventData() {
+    async deactivate() {
+      if (confirm("Are you sure want to delete event " + this.event.name + "?")) {
+        const resp = await this.$store.dispatch("event/deleteEvent", this.event);
+        if (resp === true) {
+          window.location.reload(true);
         }
-    },
-    watch: {
-        async fileBackgroundImage(val) {
-            this.tempBackgroundImage = val ? await this.$toBase64(val) : null;
-        },
-        async fileSuccessAudio(val) {
-            this.tempSuccessAudio = val ? await this.$toBase64(val) : null;
-            this.$refs.success_audio.load();
-        },
-        async fileFailedAudio(val) {
-            this.tempFailedAudio = val ? await this.$toBase64(val) : null;
-            this.$refs.failed_audio.load();
+        else {
+          alert(resp);
         }
+      }
+    }
+  },
+  watch: {
+    async fileBackgroundImage(val) {
+      this.tempBackgroundImage = val ? await this.$toBase64(val) : null;
     },
-    computed: {
-        event() {
-            return { ...this.$store.state.event.selected };
-        },
-        defaultEventName() {
-            return this.$store.state.event.selected.name;
-        }
+    async fileSuccessAudio(val) {
+      this.tempSuccessAudio = val ? await this.$toBase64(val) : null;
+      this.$refs.success_audio.load();
     },
-    components: { PasswordVerification }
+    async fileFailedAudio(val) {
+      this.tempFailedAudio = val ? await this.$toBase64(val) : null;
+      this.$refs.failed_audio.load();
+    }
+  },
+  computed: {
+    event() {
+      let row = { ...this.$store.state.event.selected };
+      if (!row.font_color) row.font_color = {r:255, g:255, b:255, a:1};
+      if (!row.box_input_color) row.box_input_color = {r:255, g:255, b:255, a:1};
+      if (!row.text_input_color) row.text_input_color = {r:0, g:0, b:0, a:1};
+      if (!row.success_overlay_color) row.success_overlay_color = {r:76, g:175, b:80, a:0.7};
+      if (!row.failed_overlay_color) row.failed_overlay_color = {r:244, g:67, b:54, a:0.7};
+      return row;
+    },
+    defaultEventName() {
+      return this.$store.state.event.selected.name;
+    }
+  },
+  components: { PasswordVerification }
 }
 </script>

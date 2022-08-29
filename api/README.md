@@ -7,7 +7,7 @@ PHP minimum version 7.4
 
 ```bash
 # install dependencies
-$ composer update
+$ php composer.phar install
 
 # serve at localhost:3001
 $ php -S localhost:3001

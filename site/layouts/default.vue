@@ -153,8 +153,8 @@ export default {
         },
         {
           icon: "mdi-qrcode-scan",
-          title: "Scan",
-          to: "/scan"
+          title: "Check In",
+          to: "/checkin"
         },
         {
           icon: "mdi-account-group",

@@ -1,1 +1,1 @@
-cd dist && php -S localhost:5000
+cd site/dist && php -S localhost:5000
