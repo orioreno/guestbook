@@ -1,1 +1,1 @@
-cd api && php composer.phar install && php -S localhost:5001
+cd api && php composer.phar install && php -S 0.0.0.0:5001

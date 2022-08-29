@@ -64,6 +64,10 @@
                       placeholder="Pick a background image"
                       prepend-icon="mdi-image"
                       v-model="fileBackgroundImage"
+                      :rules="[value => !value || value.size < imageMaxSize || 'File size should be less than ' + (imageMaxSize/1000000) + ' MB!',]"
+                      show-size
+                      :hint="'PNG/JPEG/JPG/BPM file less than ' + (imageMaxSize/1000000) + 'MB'"
+                      persistent-hint
                       label="Background image"
                     ></v-file-input>
                   </div>
@@ -80,6 +84,10 @@
                     placeholder="Pick a success sound"
                     prepend-icon="mdi-music"
                     v-model="fileSuccessAudio"
+                    :rules="[value => !value || value.size < audioMaxSize || 'File size should be less than ' + (audioMaxSize/1000000) + ' MB!',]"
+                    show-size
+                    :hint="'Audio file less than ' + (audioMaxSize/1000000) + 'MB'"
+                    persistent-hint
                     label="Check in success audio"
                   ></v-file-input>
                 </div>
@@ -100,6 +108,10 @@
                     placeholder="Pick a failed sound"
                     prepend-icon="mdi-music"
                     v-model="fileFailedAudio"
+                    :rules="[value => !value || value.size < audioMaxSize || 'File size should be less than ' + (audioMaxSize/1000000) + ' MB!',]"
+                    show-size
+                    :hint="'Audio file less than ' + (audioMaxSize/1000000) + 'MB'"
+                    persistent-hint
                     label="Check in failed audio"
                   ></v-file-input>
                 </div>
@@ -198,6 +210,8 @@ export default {
       tempBackgroundImage: null,
       tempSuccessAudio: null,
       tempFailedAudio: null,
+      imageMaxSize: 2000000,
+      audioMaxSize: 1000000
     };
   },
   methods: {
@@ -230,15 +244,21 @@ export default {
   },
   watch: {
     async fileBackgroundImage(val) {
-      this.tempBackgroundImage = val ? await this.$toBase64(val) : null;
+      if (val && val.size < this.imageMaxSize) {
+        this.tempBackgroundImage = val ? await this.$toBase64(val) : null;
+      }
     },
     async fileSuccessAudio(val) {
-      this.tempSuccessAudio = val ? await this.$toBase64(val) : null;
-      this.$refs.success_audio.load();
+      if (val && val.size < this.audioMaxSize) {
+        this.tempSuccessAudio = val ? await this.$toBase64(val) : null;
+        this.$refs.success_audio.load();
+      }
     },
     async fileFailedAudio(val) {
-      this.tempFailedAudio = val ? await this.$toBase64(val) : null;
-      this.$refs.failed_audio.load();
+      if (val && val.size < this.audioMaxSize) {
+        this.tempFailedAudio = val ? await this.$toBase64(val) : null;
+        this.$refs.failed_audio.load();
+      }
     }
   },
   computed: {

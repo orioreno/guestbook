@@ -1,6 +1,5 @@
 <template>
   <div>
-
     <div id="scan" v-if="event" :style="bodyStyle" style="position:relative">
       <audio ref="successAudio" v-if="event.checkin_success_audio">
         <source :src="event.checkin_success_audio">
@@ -59,7 +58,7 @@
 <style scoped>
   .actions {
     opacity:0.5;
-    position :fixed;
+    position :absolute;
     right:2em;
     bottom:2em;
   }
@@ -72,13 +71,15 @@
     background-size: cover;
   }
   #input {
+    background:white;
     border-radius:20px;
     border:none;
-    max-width: 500px;
-    font-size:1em;
+    font-size:3rem;
     font-weight:bold;
     font-family: "Montserrat";
     text-align:center;
+    max-width:300px;
+    letter-spacing:10px;
   }
   .camera-wrapper {
     touch-action: none;
@@ -115,10 +116,30 @@ export default {
     }
   },
   methods: {
-    showMessage(success, data) {
+    showMessage(success, data, customDuration) {
+      clearInterval(this.clearTyped);
+      this.clearTypedCounter = 0;
+      this.typed = "";
+
       clearTimeout(this.successTimeout);
       this.checkinSuccess = success;
       this.checkinData = data;
+
+      let duration = 3;
+      if (this.checkinSuccess && this.$refs.successAudio) {
+        duration = this.$refs.successAudio.duration;
+        this.$refs.successAudio.play();
+      } else if (!this.checkinSuccess && this.$refs.failedAudio) {
+        duration = this.$refs.failedAudio.duration;
+        this.$refs.failedAudio.play();
+      }
+
+      if (!isNaN(parseFloat(customDuration))) duration = customDuration;
+
+      this.successTimeout = setTimeout(() => {
+        this.checkinSuccess = null;
+        this.message = '';
+      }, duration*1000);
     },
     onKeyup(e) {
       var startCounter = true;
@@ -140,11 +161,10 @@ export default {
         return;
       }
     },
-    async submit() {
+    async submit(duration) {
       if (this.typed.length > 0) {
         let checkin = await this.$store.dispatch('guest/checkIn', {'checkin_code': this.typed});
-        this.showMessage(checkin.success, checkin.data);
-        this.typed = "";
+        this.showMessage(checkin.success, checkin.data, duration);
       }
     },
     async toggleFullscreen() {
@@ -161,9 +181,6 @@ export default {
         this.qrcodeCameraScanner = new Html5Qrcode("camera");
         interact('.camera-wrapper').draggable({
           listeners: {
-            start: (event) => {
-              console.log(event.type, event.target)
-            },
             move: (event) => {
               this.cameraPosition.x += event.dx
               this.cameraPosition.y += event.dy
@@ -180,9 +197,11 @@ export default {
           this.camera = false;
         });
       } else {
-        this.qrcodeCameraScanner.start({ facingMode: "user" }, { fps: 10, qrbox: {width: 300, height: 300}}, (decodedText, decodedResult) => {
-          this.typed = decodedText;
-          this.submit();
+        this.qrcodeCameraScanner.start({ facingMode: "user" }, { fps: 10, qrbox: {width: 350, height: 350}}, (decodedText, decodedResult) => {
+          if (this.checkinSuccess === null) {
+            this.typed = decodedText;
+            this.submit(1.5);
+          }
         }).then((ignore) => {
           this.camera = true;
         });
@@ -191,34 +210,14 @@ export default {
     },
   },
   watch: {
-    checkinSuccess() {
-      if (this.checkinSuccess !== null) {
-        let duration = 3; // in second
-
-        if (this.checkinSuccess && this.$refs.successAudio) {
-            duration = this.$refs.successAudio.duration;
-            this.$refs.successAudio.play();
-        }
-
-        if (!this.checkinSuccess && this.$refs.failedAudio) {
-          duration = this.$refs.failedAudio.duration;
-          this.$refs.failedAudio.play();
-        }
-
-        this.successTimeout = setTimeout(() => {
-          this.checkinSuccess = null;
-          this.message = '';
-        }, duration*1000);
-      }
-    },
     moveCamera() {
       console.log(this.moveCamera);
     }
   },
   mounted() {
-    window.addEventListener( "keydown", () => {
+    window.addEventListener( "keydown", (e) => {
+      document.getElementById('input').focus();
       this.checkinSuccess = null;
-
       if (this.$refs.successAudio) {
         this.$refs.successAudio.pause();
         this.$refs.successAudio.currentTime = 0;
@@ -228,7 +227,10 @@ export default {
         this.$refs.failedAudio.currentTime = 0;
       }
 
-      document.getElementById('input').focus();
+      // if (this.typed.length == 0 && e.key.length == 1 && /[a-zA-Z0-9]/.test(e.key) && this.typed.length < this.charNum) {
+      //   this.typed += e.key.toUpperCase();
+      // }
+
     });
     addEventListener('fullscreenchange', (e) => {
       this.fullscreen = !this.fullscreen;

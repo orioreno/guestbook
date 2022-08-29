@@ -56,6 +56,18 @@ export default {
     baseURL: process.env.API_URL || 'http://localhost:5001',
   },
 
+  publicRuntimeConfig: {
+    axios: {
+      browserBaseURL: process.env.BROWSER_API_URL
+    }
+  },
+
+  privateRuntimeConfig: {
+    axios: {
+      baseURL: process.env.API_URL
+    }
+  },
+
   // Vuetify module configuration: https://go.nuxtjs.dev/config-vuetify
   vuetify: {
     customVariables: ['~/assets/variables.scss'],
