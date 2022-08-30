@@ -1,11 +1,11 @@
 <template>
   <div>
     <div id="scan" v-if="event" :style="bodyStyle" style="position:relative">
-      <audio ref="successAudio" v-if="event.checkin_success_audio">
-        <source :src="event.checkin_success_audio">
+      <audio ref="successAudio">
+        <source :src="event.checkin_success_audio ?? defaultSuccessAudio">
       </audio>
-      <audio ref="failedAudio" v-if="event.checkin_failed_audio">
-        <source :src="event.checkin_failed_audio">
+      <audio ref="failedAudio">
+        <source :src="event.checkin_failed_audio ?? defaultFailedAudio">
       </audio>
       <div class="d-flex justify-center align-center" style="height:100vh;" :style="checkinBackgroundStyle">
         <div class="text-center">
@@ -93,6 +93,8 @@
 // To use Html5Qrcode (more info below)
 import {Html5Qrcode} from "html5-qrcode"
 import interact from 'interactjs'
+import successAudio from '~/assets/default_success.mp3'
+import failedAudio from '~/assets/default_failed.mp3'
 
 export default {
   name: "InputPage",
@@ -112,7 +114,9 @@ export default {
       camera: false,
       moveCamera: false,
       qrcodeCameraScanner: null,
-      cameraPosition: { x: 0, y: 0 }
+      cameraPosition: { x: 0, y: 0 },
+      defaultSuccessAudio: successAudio,
+      defaultFailedAudio: failedAudio,
     }
   },
   methods: {
@@ -126,6 +130,9 @@ export default {
       this.checkinData = data;
 
       let duration = 3;
+
+      this.stopAudio();
+
       if (this.checkinSuccess && this.$refs.successAudio) {
         duration = this.$refs.successAudio.duration;
         this.$refs.successAudio.play();
@@ -139,6 +146,7 @@ export default {
       this.successTimeout = setTimeout(() => {
         this.checkinSuccess = null;
         this.message = '';
+        this.stopAudio();
       }, duration*1000);
     },
     onKeyup(e) {
@@ -206,8 +214,17 @@ export default {
           this.camera = true;
         });
       }
-
     },
+    stopAudio() {
+      if (this.$refs.successAudio) {
+        this.$refs.successAudio.pause();
+        this.$refs.successAudio.currentTime = 0;
+      }
+      if (this.$refs.failedAudio) {
+        this.$refs.failedAudio.pause();
+        this.$refs.failedAudio.currentTime = 0;
+      }
+    }
   },
   watch: {
     moveCamera() {
@@ -218,19 +235,7 @@ export default {
     window.addEventListener( "keydown", (e) => {
       document.getElementById('input').focus();
       this.checkinSuccess = null;
-      if (this.$refs.successAudio) {
-        this.$refs.successAudio.pause();
-        this.$refs.successAudio.currentTime = 0;
-      }
-      if (this.$refs.failedAudio) {
-        this.$refs.failedAudio.pause();
-        this.$refs.failedAudio.currentTime = 0;
-      }
-
-      // if (this.typed.length == 0 && e.key.length == 1 && /[a-zA-Z0-9]/.test(e.key) && this.typed.length < this.charNum) {
-      //   this.typed += e.key.toUpperCase();
-      // }
-
+      this.stopAudio();
     });
     addEventListener('fullscreenchange', (e) => {
       this.fullscreen = !this.fullscreen;

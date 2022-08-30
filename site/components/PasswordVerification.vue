@@ -83,7 +83,7 @@ export default {
         const parts = value.split(`; evtData=`);
         if (parts.length === 2) {
           const cookie = JSON.parse(parts.pop().split(';').shift());
-          if (this.event._id == cookie.id && cookie.pwd == atob(sha256(this.event.pwd))) {
+          if (this.event._id == cookie.id && atob(cookie.pwd) == sha256(this.event.password)) {
             this.show = false;
             this.manualVerification = true;
             return true;

@@ -72,31 +72,62 @@
                     ></v-file-input>
                   </div>
                 </div>
-                <div class="col-sm-6 preview">
-                  <img :src="tempBackgroundImage ?? event.checkin_background_image" style="max-width:100%;max-height:200px">
+                <div class="col-sm-5 preview">
+                  <img v-if="tempBackgroundImage" :src="tempBackgroundImage" style="max-width:100%;max-height:200px">
+                  <div v-else class="pa-5 bg-secondary">No background image</div>
+                </div>
+                <div class="col-sm-1">
+                  <v-btn
+                    v-if="tempBackgroundImage !== null"
+                    class="my-3"
+                    fab
+                    x-small
+                    color="red"
+                    title="Remove background"
+                    @click.stop="tempBackgroundImage = null"
+                  >
+                    <v-icon dark>
+                      mdi-delete
+                    </v-icon>
+                  </v-btn>
                 </div>
               </div>
 
               <div class="row">
                 <div class="col-sm-6">
                   <v-file-input
-                    accept="audio/*"
+                    accept="audio/ogg, audio/mp3, audio/wav"
                     placeholder="Pick a success sound"
                     prepend-icon="mdi-music"
                     v-model="fileSuccessAudio"
-                    :rules="[value => !value || value.size < audioMaxSize || 'File size should be less than ' + (audioMaxSize/1000000) + ' MB!',]"
+                    :rules="[value => !value || value.size < audioMaxSize || 'File size should be less than ' + (audioMaxSize/1000) + ' KB!',]"
                     show-size
-                    :hint="'Audio file less than ' + (audioMaxSize/1000000) + 'MB'"
+                    :hint="'OGG/MP3/WAV file less than ' + (audioMaxSize/1000) + 'KB'"
                     persistent-hint
                     label="Check in success audio"
                   ></v-file-input>
                 </div>
 
-                <div class="col-sm-6 preview">
+                <div class="col-sm-5 preview">
                   <audio controls ref="success_audio">
-                    <source v-bind:src="tempSuccessAudio ?? event.checkin_success_audio">
+                    <source :src="tempSuccessAudio ?? defaultSuccessAudio">
                     Your browser does not support the audio element.
                   </audio>
+                </div>
+                <div class="col-sm-1">
+                  <v-btn
+                    v-if="tempSuccessAudio !== null"
+                    class="my-3"
+                    fab
+                    x-small
+                    color="red"
+                    title="Change to default"
+                    @click.stop="tempSuccessAudio = null; fileSuccessAudio = null; $refs.success_audio.load();"
+                  >
+                    <v-icon dark>
+                      mdi-redo-variant
+                    </v-icon>
+                  </v-btn>
                 </div>
               </div>
 
@@ -104,22 +135,37 @@
               <div class="row">
                 <div class="col-sm-6">
                   <v-file-input
-                    accept="audio/*"
+                    accept="audio/ogg, audio/mp3, audio/wav"
                     placeholder="Pick a failed sound"
                     prepend-icon="mdi-music"
                     v-model="fileFailedAudio"
-                    :rules="[value => !value || value.size < audioMaxSize || 'File size should be less than ' + (audioMaxSize/1000000) + ' MB!',]"
+                    :rules="[value => !value || value.size < audioMaxSize || 'File size should be less than ' + (audioMaxSize/1000) + ' KB!',]"
                     show-size
-                    :hint="'Audio file less than ' + (audioMaxSize/1000000) + 'MB'"
+                    :hint="'OGG/MP3/WAV file less than ' + (audioMaxSize/1000) + 'KB'"
                     persistent-hint
                     label="Check in failed audio"
                   ></v-file-input>
                 </div>
-                <div class="col-sm-6 preview">
+                <div class="col-sm-5 preview">
                   <audio controls ref="failed_audio">
-                    <source v-bind:src="tempFailedAudio ?? event.checkin_failed_audio">
+                    <source :src="tempFailedAudio ?? defaultFailedAudio">
                     Your browser does not support the audio element.
                   </audio>
+                </div>
+                <div class="col-sm-1">
+                  <v-btn
+                    v-if="tempFailedAudio !== null"
+                    class="my-3"
+                    fab
+                    x-small
+                    color="red"
+                    title="Change to default"
+                    @click.stop="tempFailedAudio = null; fileFailedAudio = null; $refs.failed_audio.load();"
+                  >
+                    <v-icon dark>
+                      mdi-redo-variant
+                    </v-icon>
+                  </v-btn>
                 </div>
               </div>
 
@@ -193,6 +239,8 @@
 
 <script>
 import PasswordVerification from '~/components/PasswordVerification.vue';
+import defaultSuccessAudio from '~/assets/default_success.mp3'
+import defaultFailedAudio from '~/assets/default_failed.mp3'
 export default {
   name: "SettingsPage",
   head: {
@@ -211,16 +259,18 @@ export default {
       tempSuccessAudio: null,
       tempFailedAudio: null,
       imageMaxSize: 2000000,
-      audioMaxSize: 1000000
+      audioMaxSize: 200000,
+      defaultSuccessAudio: defaultSuccessAudio,
+      defaultFailedAudio: defaultFailedAudio
     };
   },
   methods: {
     async saveChanges() {
-      if (this.tempBackgroundImage)
+      if (this.tempBackgroundImage !== this.event.checkin_background_image)
         this.event.checkin_background_image = this.tempBackgroundImage;
-      if (this.tempSuccessAudio)
+      if (this.tempSuccessAudio !== this.event.checkin_success_audio)
         this.event.checkin_success_audio = this.tempSuccessAudio;
-      if (this.tempFailedAudio)
+      if (this.tempFailedAudio !== this.event.checkin_failed_audio)
         this.event.checkin_failed_audio = this.tempFailedAudio;
       const resp = await this.$store.dispatch("event/updateEvent", this.event);
       if (resp === true) {
@@ -240,25 +290,32 @@ export default {
           alert(resp);
         }
       }
-    }
+    },
   },
   watch: {
     async fileBackgroundImage(val) {
       if (val && val.size < this.imageMaxSize) {
         this.tempBackgroundImage = val ? await this.$toBase64(val) : null;
+      } else {
+        this.tempBackgroundImage = this.event.checkin_background_image;
       }
     },
     async fileSuccessAudio(val) {
+      console.log(val);
       if (val && val.size < this.audioMaxSize) {
         this.tempSuccessAudio = val ? await this.$toBase64(val) : null;
-        this.$refs.success_audio.load();
+      } else {
+        this.tempSuccessAudio = this.event.checkin_success_audio;
       }
+      this.$refs.success_audio.load();
     },
     async fileFailedAudio(val) {
       if (val && val.size < this.audioMaxSize) {
         this.tempFailedAudio = val ? await this.$toBase64(val) : null;
-        this.$refs.failed_audio.load();
+      } else {
+        this.tempFailedAudio = this.event.checkin_failed_audio;
       }
+      this.$refs.failed_audio.load();
     }
   },
   computed: {
@@ -269,11 +326,14 @@ export default {
       if (!row.text_input_color) row.text_input_color = {r:0, g:0, b:0, a:1};
       if (!row.success_overlay_color) row.success_overlay_color = {r:76, g:175, b:80, a:0.7};
       if (!row.failed_overlay_color) row.failed_overlay_color = {r:244, g:67, b:54, a:0.7};
+      if (row.checkin_background_image) this.tempBackgroundImage = row.checkin_background_image;
+      if (row.checkin_success_audio) this.tempSuccessAudio = row.checkin_success_audio;
+      if (row.checkin_failed_audio) this.tempFailedAudio = row.checkin_failed_audio;
       return row;
     },
     defaultEventName() {
       return this.$store.state.event.selected.name;
-    }
+    },
   },
   components: { PasswordVerification }
 }
