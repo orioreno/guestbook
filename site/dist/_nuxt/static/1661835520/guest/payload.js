@@ -1,0 +1,1 @@
+__NUXT_JSONP__("/guest", {data:[{}],fetch:{},mutations:[["navbar\u002FloadLocalSettings",void 0]]});
