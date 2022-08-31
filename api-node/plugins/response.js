@@ -1,10 +1,10 @@
 const response = {
   success(res, data) {
     console.log("Response success");
-    res.send({
+    res.json({
       code: 200,
       data: data
-    });
+    }).end();
   },
   error(res, input) {
     console.log("Response failed");
@@ -49,16 +49,16 @@ const response = {
         case 505: message = 'HTTP Version not supported'; break;
       }
 
-      return res.send({
+      return res.json({
         code: input,
         message: message
-      });
+      }).end();
     }
 
-    res.send({
+    res.json({
       code: 580,
       message: input
-    });
+    }).end();
 
   }
 }
