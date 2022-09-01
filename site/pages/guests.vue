@@ -104,18 +104,16 @@
               class="mr-2"
               @click="manualCheckIn(item)"
               title="Manual check in"
-              v-if="!item._checkin_time"
             >
               mdi-account-check
             </v-icon>
             <v-icon
-                small
-                class="mr-2"
-                @click="showHistory(item)"
-                title="Show check in history"
-                v-if="item._checkin_time"
-              >
-                mdi-history
+              small
+              class="mr-2"
+              @click="showHistory(item)"
+              title="Show check in history"
+            >
+              mdi-history
             </v-icon>
             <v-icon
               small
@@ -238,11 +236,10 @@
 
       <!-- Guest form dialog -->
       <v-dialog
-          v-model="guestFormDialog"
-          :eager="true"
-          max-width="800"
-        >
-
+        v-model="guestFormDialog"
+        :eager="true"
+        max-width="800"
+      >
         <v-form
           class="mt-2"
           ref="form"
@@ -621,10 +618,6 @@ export default {
     headersTable() {
       let columns = [...this.headers];
       if (columns.length > 0) {
-        columns.push({
-          text: "LAST CHECKIN TIME",
-          value: "_checkin_time",
-        });
         columns.push({
           text: "ACTIONS",
           value: "actions",
