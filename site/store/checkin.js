@@ -19,10 +19,11 @@ export const actions = {
 
   async submit(state, {checkin_code, manual}) {
     const response = await this.$axios.$post('checkin', {checkin_code: checkin_code, manual: manual ?? false});
+    const message = response.code == 200 ? response.data.message : response.message;
     return {
       success: response.code == 200,
       data: {
-        message: response.code == 200 ? response.data.message : response.message,
+        message: message.replace(/(?:\r\n|\r|\n)/g, '<br>'),
         time: response.code == 200 ? response.data.time : null
       }
     };

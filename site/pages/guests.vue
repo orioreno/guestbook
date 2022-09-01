@@ -592,11 +592,11 @@ export default {
     },
     async manualCheckIn(guest) {
       if (confirm("Manual check in for " + guest.name + " (" + guest.checkin_code + "). Proceed?")) {
-        let checkin = await this.$store.dispatch("guest/checkIn", { checkin_code: guest.checkin_code, manual: true });
+        let checkin = await this.$store.dispatch("checkin/submit", { checkin_code: guest.checkin_code, manual: true });
         if (checkin.success === true) {
-          this.$store.commit("snackbar/show", {text: checkin.message});
+          this.$store.commit("snackbar/show", {text: checkin.data.message});
         } else {
-          this.$store.commit("snackbar/show", {text: checkin.message, color: 'error'});
+          this.$store.commit("snackbar/show", {text: checkin.data.message, color: 'error'});
         }
         this.loadGuests();
       }
