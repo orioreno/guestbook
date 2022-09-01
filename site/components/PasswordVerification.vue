@@ -1,8 +1,8 @@
 <template>
   <div>
-    <slot v-if="manualVerification || verified"></slot>
+    <slot v-if="manualVerified || cookieVerified"></slot>
     <div v-else style="height:80vh" class="d-flex justify-center align-center">
-      <div class="text-center">
+      <div>
         <v-card>
           <v-form
             ref="form"
@@ -13,6 +13,9 @@
             <v-card-title>
               Enter password to access this page
             </v-card-title>
+            <v-card-subtitle>
+              {{ event ? event.name : ''  }}
+            </v-card-subtitle>
             <v-card-text>
               <v-text-field
                 v-model="password"
@@ -48,9 +51,12 @@ import sha256 from 'crypto-js/sha256';
 
 export default {
   name: 'VerificationDialog',
+  props: {
+    onVerified: Function
+  },
   data () {
     return {
-      manualVerification: false,
+      manualVerified: false,
       valid: false,
       password: '',
       passwordVisible: false,
@@ -62,30 +68,37 @@ export default {
     async verify() {
       if (this.password == this.event.password) {
         const cookie = {
-          'id': this.event._id,
+          'id': this.event.id,
           'pwd': btoa(sha256(this.password))
         };
         document.cookie = "evtData=" + JSON.stringify(cookie) + "; expires=" + this.$moment().add(1, 'hour').format('Y-MM-DD HH:mm:ss')+ "; path=/";
-        this.manualVerification = true;
+        this.manualVerified = true;
+        if (this.onVerified) this.onVerified();
       } else {
         this.passwordError = true;
         this.password = '';
       }
     }
   },
+  watch: {
+    manualVerified(success) {
+      if (success && this.onVerified) this.onVerified();
+    },
+    cookieVerified(success) {
+      if (success && this.onVerified) this.onVerified();
+    }
+  },
   computed: {
     event() {
       return this.$store.state.event.selected;
     },
-    verified() {
+    cookieVerified() {
       if (this.event) {
         const value = `; ${document.cookie}`;
         const parts = value.split(`; evtData=`);
         if (parts.length === 2) {
           const cookie = JSON.parse(parts.pop().split(';').shift());
-          if (this.event._id == cookie.id && atob(cookie.pwd) == sha256(this.event.password)) {
-            this.show = false;
-            this.manualVerification = true;
+          if (this.event.id == cookie.id && atob(cookie.pwd) == sha256(this.event.password)) {
             return true;
           }
         }

@@ -5,7 +5,7 @@ module.exports = function(selectedEvent) {
 
   if (!(selectedEvent && 'id' in selectedEvent)) return false;
 
-  function generateCheckinCode() {
+  async function generateCheckinCode() {
     let result = '';
     const length = 6;
     const characters = '123456789ABCDEFGHJKLMNOPQRSTUVWXYZ';
@@ -13,12 +13,26 @@ module.exports = function(selectedEvent) {
     for ( var i = 0; i < length; i++ ) {
       result += characters.charAt(Math.floor(Math.random() * charactersLength));
     }
+
+    const existing = await knex(tableName)
+        .first(['id'])
+        .where('checkin_code', '=', result)
+        .andWhere('event_id', '=', selectedEvent.id);
+
+    // regenerate if checkin code already used
+    if (existing) result = generateCheckinCode();
     return result;
   };
 
-  function reformatInput(name, additional) {
-    checkinCode = additional.checkin_code ?? generateCheckinCode();
+  async function reformatInput(name, additional) {
+    additional = Object.keys(additional).reduce((acc, key) => {
+      acc[key.toLowerCase().replace(' ', '_')] = additional[key];
+      return acc;
+    }, {});
+
+    const checkinCode = additional.checkin_code && String(additional.checkin_code).trim().length > 0 ? additional.checkin_code : await generateCheckinCode();
     keyTobeRemoved = ['id', 'name', 'checkin_code', 'created', 'modified'];
+
     for (key in additional) {
       if (keyTobeRemoved.includes(key)) {
         delete additional[key];
@@ -58,21 +72,25 @@ module.exports = function(selectedEvent) {
       return reformatRow(row);
     },
 
-    async getData() {
+    async getData(event_id) {
       let data = await knex(tableName)
         .select(['id', 'name', 'checkin_code', 'misc', 'created', 'modified'])
-        .orderBy(id, 'asc')
-        .where('event_id', '=', selectedEvent.id);
+        .orderBy('id', 'asc')
+        .where('event_id', '=', event_id ?? selectedEvent.id);
 
-      for (let row of data) {
-        row = reformatRow(row);
+      for (idx in data) {
+        data[idx] = reformatRow(data[idx]);
       }
 
       return data;
     },
 
     async add(name, additional) {
-      let row = reformatInput(name, additional);
+      let row = await reformatInput(name, additional);
+
+      const existingCode = await knex(tableName).first('id').where('checkin_code', '=', row.checkin_code).andWhere('event_id', '=', selectedEvent.id);
+      if (existingCode) return 'Checkin code ' + row.checkin_code + ' already used';
+
       row.event_id = selectedEvent.id;
       row.created = moment().unix();
 
@@ -90,7 +108,11 @@ module.exports = function(selectedEvent) {
       if (data) {
         const existing = await this.getRow(id);
         if (existing) {
-          data = reformatInput(data.name ?? existing.name, data);
+          data = await reformatInput(data.name ?? existing.name, data);
+
+          const existingCode = await knex(tableName).first('id').where('checkin_code', '=', data.checkin_code).andWhere('id', '<>', id).andWhere('event_id', '=', selectedEvent.id);
+          if (existingCode) return 'Checkin code ' + data.checkin_code + ' already used';
+
           data.modified = moment().unix();
 
           const update = await knex(tableName)
@@ -119,6 +141,18 @@ module.exports = function(selectedEvent) {
       }
 
       return false;
+    },
+
+    async deleteAll() {
+      await knex(tableName)
+          .where('event_id', selectedEvent.id)
+          .del();
+
+      await knex('checkin')
+        .where('event_id', selectedEvent.id)
+        .del();
+
+      return true;
     },
   }
 

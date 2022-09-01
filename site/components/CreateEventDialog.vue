@@ -78,7 +78,7 @@ export default {
   },
   methods: {
     async save() {
-      const resp = await this.$store.dispatch('event/addEvent', {name: this.name, password: this.password});
+      const resp = await this.$store.dispatch('event/add', {name: this.name, password: this.password});
       if (resp === true) {
         window.location.reload(true);
         return;

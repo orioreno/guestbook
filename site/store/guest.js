@@ -13,59 +13,77 @@ export const mutations = {
 }
 
 export const actions = {
-  async loadGuests(state) {
-    const response = await this.$axios.$get('guest.php');
+  async load(state) {
+    const response = await this.$axios.$get('guest');
     if (response.code == 200) {
 
-      let columns = [];
-
-      for (let col in response.data.columns) {
-        columns.push({
-          value: col,
-          text: response.data.columns[col]
-        });
+      const columns = [];
+      const exceptions = ['id', 'created', 'modified'];
+      for (const row of response.data) {
+        for (const col in row) {
+          if (!exceptions.includes(col) && !columns.includes(col)) columns.push(col);
+        }
       }
 
-      this.commit('guest/setList', response.data.rows);
-      this.commit('guest/setColumns', columns);
+      this.commit('guest/setList', response.data);
+      this.commit('guest/setColumns', columns.map(function(col) {
+        return {
+          value: col,
+          text: col.replace('_', ' ').toUpperCase()
+        }
+      }));
     }
   },
 
-  async importGuests(state, guests) {
+  async import(state, guests) {
     if (guests.length > 0) {
-      const response = await this.$axios.$put('guest.php', guests);
-      return response.code == 200 ? true : response.message;
+      const response = await this.$axios.$put('guest', guests);
+      if (response.code == 200) {
+        const errors = [];
+        for (const row of response.data) {
+          if (typeof row == 'string') errors.push(row);
+        }
+        return errors.length > 0 ? errors.join("\r\n") : true;
+      }
+      return response.message;
     }
     return 'Please specify guest';
   },
 
-  async addGuest(state, guest) {
-    const response = await this.$axios.post('guest.php', guest);
-    return response.data.code == 200 ? true : response.data.message;
+  async add(state, guest) {
+    const response = await this.$axios.$post('guest', guest);
+    return response.code == 200 ? true : response.message;
   },
 
-  async editGuest(state, guest) {
-    if (guest._id) {
-      const response = await this.$axios.patch('guest.php', guest);
-      return response.data.code == 200 ? true : response.data.message;
+  async edit(state, guest) {
+    if (guest.id) {
+      const response = await this.$axios.$patch('guest/'+guest.id, guest);
+      return response.code == 200 ? true : response.message;
     }
     return 'Please select a guest';
   },
 
-  async deleteGuest(state, {_id}) {
-    if (_id) {
-      const response = await this.$axios.delete('guest.php?id='+_id);
-      return response.data.code == 200 ? true : response.data.message;
+  async delete(state, id) {
+    if (id) {
+      const response = await this.$axios.$delete('guest/'+id);
+      return response.code == 200 ? true : response.message;
     }
   },
 
-  async cloneGuests(state, cloneEventId, regenerate) {
-    const response = await this.$axios.put('guest.php', {cloneEventId: cloneEventId, regenerate: regenerate});
-    return response.data.code == 200 ? true : response.data.message;
+  async clone(state, cloneEventId) {
+    const response = await this.$axios.$put('guest/clone/'+cloneEventId);
+    if (response.code == 200) {
+      const errors = [];
+      for (const row of response.data) {
+        if (typeof row == 'string') errors.push(row);
+      }
+      return errors.length > 0 ? errors.join("\r\n") : true;
+    }
+    return response.message;
   },
 
   async checkIn(state, {checkin_code, manual}) {
-    const response = await this.$axios.post('checkin.php', {_checkin_code: checkin_code, manual: manual ?? false});
+    const response = await this.$axios.$post('checkin.php', {_checkin_code: checkin_code, manual: manual ?? false});
     return {
       success: response.data.code == 200,
       data: response.data.code == 200 ? response.data.data : response.data.message

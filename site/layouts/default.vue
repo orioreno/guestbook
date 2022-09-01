@@ -129,6 +129,8 @@
       <v-container>
         <Nuxt />
       </v-container>
+
+      <Snackbar></Snackbar>
     </v-main>
   </v-app>
 </template>
@@ -171,7 +173,7 @@ export default {
   },
   methods: {
     async changeEvent() {
-      const resp = await this.$store.dispatch('event/changeSelected', {_id: this.changeTo._id, password: this.password});
+      const resp = await this.$store.dispatch('event/select', {id: this.changeTo.id, password: this.password});
       if (resp === true) {
         document.cookie = "evtData=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/";
         window.location.href = '.';
@@ -183,8 +185,8 @@ export default {
   },
   async created() {
     await this.$store.commit("navbar/loadLocalSettings");
-    await this.$store.dispatch("event/loadSelected");
-    await this.$store.dispatch("event/loadEvents");
+    await this.$store.dispatch("event/selected");
+    await this.$store.dispatch("event/load");
   },
   computed: {
     drawer: {

@@ -226,11 +226,6 @@ export default {
       }
     }
   },
-  watch: {
-    moveCamera() {
-      console.log(this.moveCamera);
-    }
-  },
   mounted() {
     window.addEventListener( "keydown", (e) => {
       document.getElementById('input').focus();
@@ -247,34 +242,48 @@ export default {
         this.cameraScannerY = e.clientY;
       }
     });
+    this.$store.dispatch("event/selected");
+    this.$store.dispatch("checkin/loadConfig");
   },
   computed: {
     event() {
       return this.$store.state.event.selected;
     },
+    checkinConfig() {
+      let row = { ...this.$store.state.checkin.config };
+      if (!row.font_color) row.font_color = {r:255, g:255, b:255, a:1};
+      if (!row.box_input_color) row.box_input_color = {r:255, g:255, b:255, a:1};
+      if (!row.text_input_color) row.text_input_color = {r:0, g:0, b:0, a:1};
+      if (!row.success_overlay_color) row.success_overlay_color = {r:76, g:175, b:80, a:0.7};
+      if (!row.failed_overlay_color) row.failed_overlay_color = {r:244, g:67, b:54, a:0.7};
+      if (row.background_image) this.tempBackgroundImage = row.background_image;
+      if (row.success_audio) this.tempSuccessAudio = row.success_audio;
+      if (row.failed_audio) this.tempFailedAudio = row.failed_audio;
+      return row;
+    },
     bodyStyle() {
       var style = {};
-      if (this.event) {
-        if (this.event.checkin_background_image) style['background-image'] = "url(" + this.event.checkin_background_image + ")";
-        if (this.event.font_color) style['color'] = 'rgba(' + this.event.font_color.r + ',' + this.event.font_color.g + ',' + this.event.font_color.b + ',' + this.event.font_color.a + ')';
+      if (this.checkinConfig) {
+        if (this.checkinConfig.background_image) style['background-image'] = "url(" + this.checkinConfig.background_image + ")";
+        if (this.checkinConfig.font_color) style['color'] = 'rgba(' + this.checkinConfig.font_color.r + ',' + this.checkinConfig.font_color.g + ',' + this.checkinConfig.font_color.b + ',' + this.checkinConfig.font_color.a + ')';
       }
       return style;
     },
     boxInputStyle() {
       var style = {};
-      if (this.event) {
-        if (this.event.box_input_color) style['background-color'] =  'rgba(' + this.event.box_input_color.r + ',' + this.event.box_input_color.g + ',' + this.event.box_input_color.b + ',' + this.event.box_input_color.a + ')';
-        if (this.event.text_input_color) style['color'] =  'rgba(' + this.event.text_input_color.r + ',' + this.event.text_input_color.g + ',' + this.event.text_input_color.b + ',' + this.event.text_input_color.a + ')';
+      if (this.checkinConfig) {
+        if (this.checkinConfig.box_input_color) style['background-color'] =  'rgba(' + this.checkinConfig.box_input_color.r + ',' + this.checkinConfig.box_input_color.g + ',' + this.checkinConfig.box_input_color.b + ',' + this.checkinConfig.box_input_color.a + ')';
+        if (this.checkinConfig.text_input_color) style['color'] =  'rgba(' + this.checkinConfig.text_input_color.r + ',' + this.checkinConfig.text_input_color.g + ',' + this.checkinConfig.text_input_color.b + ',' + this.checkinConfig.text_input_color.a + ')';
       }
       return style;
     },
     checkinBackgroundStyle() {
       var style = {};
-      if (this.event) {
+      if (this.checkinConfig) {
         if (this.checkinSuccess === true) {
-          style['background-color'] = this.event.success_overlay_color ? 'rgba(' + this.event.success_overlay_color.r + ',' + this.event.success_overlay_color.g + ',' + this.event.success_overlay_color.b + ',' + this.event.success_overlay_color.a + ')' : 'rgba(76,175,80,0.7)';
+          style['background-color'] = this.checkinConfig.success_overlay_color ? 'rgba(' + this.checkinConfig.success_overlay_color.r + ',' + this.checkinConfig.success_overlay_color.g + ',' + this.checkinConfig.success_overlay_color.b + ',' + this.checkinConfig.success_overlay_color.a + ')' : 'rgba(76,175,80,0.7)';
         } else if (this.checkinSuccess === false) {
-          style['background-color'] = this.event.failed_overlay_color ? 'rgba(' + this.event.failed_overlay_color.r + ',' + this.event.failed_overlay_color.g + ',' + this.event.failed_overlay_color.b + ',' + this.event.failed_overlay_color.a + ')' : 'rgba(244,67,54,0.7)';
+          style['background-color'] = this.checkinConfig.failed_overlay_color ? 'rgba(' + this.checkinConfig.failed_overlay_color.r + ',' + this.checkinConfig.failed_overlay_color.g + ',' + this.checkinConfig.failed_overlay_color.b + ',' + this.checkinConfig.failed_overlay_color.a + ')' : 'rgba(244,67,54,0.7)';
         }
       }
       return style;

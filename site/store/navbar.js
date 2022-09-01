@@ -1,6 +1,10 @@
 export const state = () => ({
   drawer: false,
   miniVariant: false,
+  snackbar: false,
+  snackbarText: '',
+  snackbarColor: 'primary',
+  snackbarDuration: 3
 })
 
 export const mutations = {
@@ -27,5 +31,15 @@ export const mutations = {
         if (settings.miniVariant) state.miniVariant = settings.miniVariant;
       }
     }
-  }
+  },
+  showSnackbar(state, value) {
+    if (typeof value == 'string') {
+      state.snackbarText = value;
+    } else {
+      state.snackbarText = value.text ?? '';
+      state.snackbarDuration = value.duration ?? 3;
+      state.snackbarColor = value.color ?? 'primary';
+    }
+    state.snackbar = value;
+  },
 }

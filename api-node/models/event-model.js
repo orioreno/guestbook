@@ -13,7 +13,7 @@ module.exports = function() {
 
     async getSelected() {
       const row = await knex(tableName)
-        .first(['id', 'name', 'created', 'modified'])
+        .first(['id', 'name', 'password', 'created', 'modified'])
         .where('selected', '=', 1);
       return row;
     },
@@ -46,24 +46,22 @@ module.exports = function() {
       return 'Unable to add event';
     },
 
-    async edit(id, data) {
+    async edit(data) {
       if (data) {
-        const existing = await knex(tableName)
-          .select(['name', 'password'])
-          .first('id')
-          .where('id', '=', id);
+        const selectedEvent = await this.getSelected();
 
-        if (existing) {
+        if (selectedEvent) {
           // field verification
+          exception = ['id', 'selected', 'created', 'modified'];
           for (key in data) {
-            if (key == 'id' || !(key in existing)) delete data[key];
+            if (exception.includes(key)) delete data.key;
           }
 
           // check name
           if ('name' in data) {
             data.name = data.name.trim();
 
-            const existingName = await knex(tableName).first('id').where('name', '=', data.name).andWhere('id', '<>', id);
+            const existingName = await knex(tableName).first('id').where('name', '=', data.name).andWhere('id', '<>', selectedEvent.id);
             if (existingName) return 'Event ' + data.name + ' already exists';
           }
 
@@ -71,7 +69,7 @@ module.exports = function() {
           data.modified = moment().unix();
 
           const update = await knex(tableName)
-            .where('id', '=', id)
+            .where('id', '=', selectedEvent.id)
             .update(data);
 
           return update ? true : 'Unable to edit event';
@@ -82,23 +80,23 @@ module.exports = function() {
     },
 
     async delete(id) {
-      const existing = await this.getRow(id);
+      const selected = await this.getSelected();
 
-      if (existing) {
+      if (selected) {
         await knex(tableName)
-          .where('id', id)
+          .where('id', selected.id)
           .del();
 
         await knex('checkin_config')
-          .where('event_id', id)
+          .where('event_id', selected.id)
           .del();
 
         await knex('guest')
-          .where('event_id', id)
+          .where('event_id', selected.id)
           .del();
 
         await knex('checkin')
-          .where('event_id', id)
+          .where('event_id', selected.id)
           .del();
 
         return true;

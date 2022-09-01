@@ -63,7 +63,9 @@ const db = new sqlite3.Database(dir + '/' + filename, function (err) {
       failed_overlay_color TEXT,
       background_image BLOB,
       success_audio BLOB,
-      failed_audio BLOB
+      failed_audio BLOB,
+      created INTEGER,
+      modified INTEGER
       )`,
     (err) => {
         if (!err) {
