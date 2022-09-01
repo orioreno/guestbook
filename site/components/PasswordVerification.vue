@@ -1,6 +1,6 @@
 <template>
   <div>
-    <slot v-if="manualVerified || cookieVerified"></slot>
+    <slot v-if="show"></slot>
     <div v-else style="height:80vh" class="d-flex justify-center align-center">
       <div>
         <v-card>
@@ -52,7 +52,7 @@ import sha256 from 'crypto-js/sha256';
 export default {
   name: 'VerificationDialog',
   props: {
-    onVerified: Function
+    verified: Function
   },
   data () {
     return {
@@ -73,19 +73,15 @@ export default {
         };
         document.cookie = "evtData=" + JSON.stringify(cookie) + "; expires=" + this.$moment().add(1, 'hour').format('Y-MM-DD HH:mm:ss')+ "; path=/";
         this.manualVerified = true;
-        if (this.onVerified) this.onVerified();
       } else {
         this.passwordError = true;
         this.password = '';
       }
     }
   },
-  watch: {
-    manualVerified(success) {
-      if (success && this.onVerified) this.onVerified();
-    },
-    cookieVerified(success) {
-      if (success && this.onVerified) this.onVerified();
+  mounted() {
+    if (this.show && this.verified) {
+      this.verified();
     }
   },
   computed: {
@@ -105,6 +101,9 @@ export default {
       }
       return false;
     },
-  }
+    show() {
+      return this.manualVerified || this.cookieVerified;
+    }
+  },
 }
 </script>

@@ -11,23 +11,23 @@
         <div class="text-center">
           <!-- SUCCESS -->
           <div v-if="checkinSuccess === true">
-            <h1 class="display-3" v-html="checkinData._checkin_message.replace(/(?:\r\n|\r|\n)/g, '<br>')"></h1>
+            <h1 class="display-3" v-html="checkinMessage"></h1>
             <div class="mt-5" style="opacity:0.75">
-              {{ $moment.unix(checkinData._checkin_log[0].time).format('D MMM Y HH:mm:ss') }}
+              {{ $moment.unix(checkinTime).format('D MMM Y HH:mm:ss') }}
             </div>
           </div>
 
           <!-- FAILED -->
           <div v-else-if="checkinSuccess == false">
-            <h1 class="text-center display-3">{{ checkinData }}</h1>
+            <h1 class="text-center display-3" v-html="checkinMessage"></h1>
           </div>
 
           <!-- SCAN -->
           <form @submit.prevent="submit" v-show="checkinSuccess === null">
             <h1 class="mb-3">ENTER CHECK IN CODE</h1>
-            <input type="text" v-model="typed" id="input" class="text-uppercase" :style="boxInputStyle"  onblur="this.focus()" autofocus length="6" @keyup="onKeyup" maxlength="6">
+            <input type="text" v-model="typed" id="input" class="text-uppercase" :style="boxInputStyle" ref="input" onblur="this.focus()" autofocus length="6" @keyup="onKeyup" maxlength="6">
             <div class="mt-3" style="opacity:0.75;font-size:0.8em">
-                {{ clearTypedCounter > 0 && clearTypedCounter <= 3 ? 'Clearing in ' + clearTypedCounter + ' second...' : '&nbsp;' }}
+                {{ clearTypedCounter > 0 && 3 >= clearTypedCounter ? 'Clearing in ' + clearTypedCounter + ' second...' : '&nbsp;' }}
             </div>
           </form>
         </div>
@@ -97,15 +97,16 @@ import successAudio from '~/assets/default_success.mp3'
 import failedAudio from '~/assets/default_failed.mp3'
 
 export default {
-  name: "InputPage",
+  name: "CheckInPage",
   head: {
-    title: "Scan",
+    title: "Check In",
   },
   data() {
     return {
       typed: '',
       checkinSuccess: null,
-      checkinData: null,
+      checkinMessage: null,
+      checkinTime: null,
       fullscreen: false,
       clearTyped: null,
       clearTypedCounter: 0,
@@ -127,7 +128,8 @@ export default {
 
       clearTimeout(this.successTimeout);
       this.checkinSuccess = success;
-      this.checkinData = data;
+      this.checkinMessage = data.message.replace(/(?:\r\n|\r|\n)/g, '<br>');
+      this.checkinTime = data.time;
 
       let duration = 3;
 
@@ -171,7 +173,7 @@ export default {
     },
     async submit(duration) {
       if (this.typed.length > 0) {
-        let checkin = await this.$store.dispatch('guest/checkIn', {'checkin_code': this.typed});
+        let checkin = await this.$store.dispatch('checkin/submit', {'checkin_code': this.typed});
         this.showMessage(checkin.success, checkin.data, duration);
       }
     },
@@ -228,11 +230,11 @@ export default {
   },
   mounted() {
     window.addEventListener( "keydown", (e) => {
-      document.getElementById('input').focus();
+      if (this.$refs.input) this.$refs.input.focus();
       this.checkinSuccess = null;
       this.stopAudio();
     });
-    addEventListener('fullscreenchange', (e) => {
+    document.addEventListener('fullscreenchange', (e) => {
       this.fullscreen = !this.fullscreen;
     });
     document.addEventListener('onmousemove', (e) => {
@@ -244,6 +246,11 @@ export default {
     });
     this.$store.dispatch("event/selected");
     this.$store.dispatch("checkin/loadConfig");
+  },
+  destroyed() {
+    window.removeEventListener('keydown', null, false);
+    document.removeEventListener('fullscreenchange', null, false);
+    document.removeEventListener('onmousemove', null, false);
   },
   computed: {
     event() {

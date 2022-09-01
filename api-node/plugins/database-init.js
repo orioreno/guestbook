@@ -104,7 +104,8 @@ const db = new sqlite3.Database(dir + '/' + filename, function (err) {
       id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
       event_id INTEGER NOT NULL,
       guest_id INTEGER NOT NULL,
-      time INTEGER NOT NULL
+      time INTEGER NOT NULL,
+      manual INTEGER NOT NULL
     )`,
     (err) => {
         if (!err) {

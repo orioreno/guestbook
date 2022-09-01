@@ -72,6 +72,15 @@ module.exports = function(selectedEvent) {
       return reformatRow(row);
     },
 
+    async getRowByCode(checkin_code) {
+      let row = await knex(tableName)
+        .first(['id', 'name', 'checkin_code', 'misc'])
+        .where('checkin_code', '=', checkin_code)
+        .andWhere('event_id', '=', selectedEvent.id);
+
+      return reformatRow(row);
+    },
+
     async getData(event_id) {
       let data = await knex(tableName)
         .select(['id', 'name', 'checkin_code', 'misc', 'created', 'modified'])

@@ -12,7 +12,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
 app.use(logger('dev'));
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '10mb'}));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -32,6 +32,7 @@ app.use('/', require('./routes/index'));
 app.use('/event', require('./routes/event'));
 app.use('/guest', require('./routes/guest'));
 app.use('/checkin', require('./routes/checkin'));
+app.use('/checkin/config', require('./routes/checkin-config'));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

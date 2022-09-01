@@ -13,6 +13,22 @@ export const mutations = {
 }
 
 export const actions = {
+  async load(state) {
+
+  },
+
+  async submit(state, {checkin_code, manual}) {
+    const response = await this.$axios.$post('checkin', {checkin_code: checkin_code, manual: manual ?? false});
+    return {
+      success: response.code == 200,
+      data: {
+        message: response.code == 200 ? response.data.message : response.message,
+        time: response.code == 200 ? response.data.time : null
+      }
+    };
+  },
+
+  // CONFIG
   async loadConfig(state) {
     const response = await this.$axios.$get('checkin/config');
     if (response.code == 200) this.commit('checkin/setConfig', response.data ?? {});

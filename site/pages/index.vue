@@ -194,7 +194,7 @@
 
 <script>
 export default {
-  name: "IndexPage",
+  name: "DashboardPage",
   head: {
     title: "Dashboard"
   },
@@ -205,7 +205,8 @@ export default {
       last_update: null,
       refresh_rate: 5,
       historyDialog: false,
-      historyData: {}
+      historyData: {},
+      loadTimer: null
     };
   },
   methods: {
@@ -220,7 +221,12 @@ export default {
   },
   created() {
     this.loadGuests();
-    setInterval(() => this.loadGuests(), this.refresh_rate * 1000);
+    console.log('Timer initiated');
+    this.loadTimer = setInterval(() => this.loadGuests(), this.refresh_rate * 1000);
+  },
+  destroyed() {
+    console.log('Timer cleared');
+    clearInterval(this.loadTimer);
   },
   computed: {
     guests() {

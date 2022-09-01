@@ -126,10 +126,9 @@
     </v-dialog>
 
     <v-main>
-      <v-container>
+      <v-container v-if="selectedEvent.id">
         <Nuxt />
       </v-container>
-
       <Snackbar></Snackbar>
     </v-main>
   </v-app>
@@ -161,7 +160,7 @@ export default {
         {
           icon: "mdi-account-group",
           title: "Guests",
-          to: "/guest"
+          to: "/guests"
         },
         {
           icon: "mdi-cog",
@@ -183,10 +182,10 @@ export default {
       }
     }
   },
-  async created() {
-    await this.$store.commit("navbar/loadLocalSettings");
-    await this.$store.dispatch("event/selected");
-    await this.$store.dispatch("event/load");
+  mounted() {
+    this.$store.commit("navbar/loadLocalSettings");
+    this.$store.dispatch("event/selected");
+    this.$store.dispatch("event/load");
   },
   computed: {
     drawer: {

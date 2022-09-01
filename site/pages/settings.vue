@@ -1,6 +1,6 @@
 <template>
   <div>
-    <PasswordVerification :onVerified="loadData">
+    <PasswordVerification :verified="loadData">
       <v-expansion-panels v-model="panel" v-if="event">
         <v-expansion-panel>
           <v-expansion-panel-header>General</v-expansion-panel-header>
@@ -32,7 +32,7 @@
               ></v-text-field>
 
               <div class="mt-5">
-                <v-btn type="submit" :disabled="!generalValid" color="primary">Save changes</v-btn>
+                <v-btn type="submit" :loading="loading" :disabled="!generalValid" color="primary">Save changes</v-btn>
               </div>
             </v-form>
           </v-expansion-panel-content>
@@ -85,7 +85,7 @@
                     x-small
                     color="red"
                     title="Remove background"
-                    @click.stop="tempBackgroundImage = null"
+                    @click.stop="fileBackgroundImage = null; tempBackgroundImage = null;"
                   >
                     <v-icon dark>
                       mdi-delete
@@ -194,7 +194,7 @@
               </div>
 
               <div class="mt-5">
-                <v-btn type="submit" :disabled="!checkinConfigValid" color="primary">Save changes</v-btn>
+                <v-btn type="submit" :loading="loading" :disabled="!checkinConfigValid" color="primary">Save changes</v-btn>
               </div>
             </v-form>
           </v-expansion-panel-content>
@@ -229,7 +229,7 @@
               ></v-text-field>
 
               <div class="mt-5">
-                <v-btn type="submit" :disabled="!deactivationValid" color="error">Deactivate current event</v-btn>
+                <v-btn type="submit" :loading="loading" :disabled="!deactivationValid" color="error">Deactivate current event</v-btn>
               </div>
             </v-form>
           </v-expansion-panel-content>
@@ -261,6 +261,7 @@ export default {
   data() {
     return {
       panel: 0,
+      loading: false,
       deactivationValid: false,
       deactivationCode: "",
       deactivationPassword: "",
@@ -281,12 +282,13 @@ export default {
     };
   },
   methods: {
-    async loadData() {
+    loadData() {
       this.$store.dispatch("event/load");
       this.$store.dispatch("event/selected");
       this.$store.dispatch("checkin/loadConfig");
     },
     async saveEvent() {
+      this.loading = true;
       const resp = await this.$store.dispatch("event/update", this.event);
       if (resp === true) {
         this.$store.commit("snackbar/show", {text: 'General settings has been saved'});
@@ -294,8 +296,10 @@ export default {
       } else {
         this.$store.commit("snackbar/show", {text: resp, color: 'error'});
       }
+      this.loading = false;
     },
     async saveCheckinConfig() {
+      this.loading = true;
       if (this.tempBackgroundImage !== this.checkinConfig.background_image)
         this.checkinConfig.background_image = this.tempBackgroundImage;
       if (this.tempSuccessAudio !== this.checkinConfig.success_audio)
@@ -309,18 +313,21 @@ export default {
       } else {
         this.$store.commit("snackbar/show", {text: resp, color: 'error'});
       }
+      this.loading = false;
     },
     async deactivate() {
       if (this.deactivationPassword !== this.event.password) {
         return alert('Password does not match');
       }
       if (confirm("Are you sure want to delete event " + this.$store.state.event.selected.name + "?")) {
+        this.loading = true;
         const resp = await this.$store.dispatch("event/delete");
         if (resp === true) {
           window.location.reload(true);
         } else {
           this.$store.commit("snackbar/show", {text: resp, color: 'error'});
         }
+        this.loading = false;
       }
     },
   },

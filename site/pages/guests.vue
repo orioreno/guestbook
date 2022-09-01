@@ -1,6 +1,6 @@
 <template>
   <div>
-    <PasswordVerification :onVerified="loadGuests">
+    <PasswordVerification :verified="loadGuests">
       <v-card>
         <v-card-title>
           <v-menu offset-y>
@@ -333,7 +333,7 @@ import { saveAs } from 'file-saver';
 import PasswordVerification from '~/components/PasswordVerification.vue';
 
 export default {
-  name: "GuestPage",
+  name: "GuestsPage",
   head: {
     title: "Guests",
   },
@@ -359,7 +359,7 @@ export default {
     };
   },
   methods: {
-    async loadGuests() {
+    loadGuests() {
       this.$store.dispatch("guest/load");
     },
     openImportDialog() {
