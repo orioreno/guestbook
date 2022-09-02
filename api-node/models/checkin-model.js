@@ -17,6 +17,21 @@ module.exports = function(selectedEvent) {
         });
       if (insert) return time;
       return false;
+    },
+
+    async getData(guest_id) {
+      const where = {
+        'checkin.event_id': selectedEvent.id
+      };
+      if (guest_id) {
+        where['checkin.guest_id'] = guest_id;
+      }
+      const data = await knex(tableName)
+        .innerJoin('guest', 'checkin.guest_id', 'guest.id')
+        .where(where)
+        .orderBy('checkin.time', 'desc')
+        .select(['checkin.id', 'checkin.guest_id', 'guest.name', 'guest.checkin_code', 'checkin.time', 'checkin.manual']);
+      return data;
     }
   }
 }

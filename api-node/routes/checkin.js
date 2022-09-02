@@ -28,8 +28,13 @@ router.use(async function(req, res, next) {
 });
 
 router.get('/', async function(req, res, next) {
-  // const data = await model.getConfig();
-  // response.success(res, data);
+  const data = await model.getData();
+  response.success(res, data);
+});
+
+router.get('/:guestId', async function(req, res, next) {
+  const data = await model.getData(req.params.guestId);
+  response.success(res, data);
 });
 
 router.post('/', async function(req, res, next) {
