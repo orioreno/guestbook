@@ -27,16 +27,25 @@ router.use(async function(req, res, next) {
   next();
 });
 
+/* GET checkin listing */
 router.get('/', async function(req, res, next) {
   const data = await model.getData();
   response.success(res, data);
 });
 
+/* GET checkin config. */
+router.get('/config', async function(req, res, next) {
+  const data = await modelConfig.getConfig();
+  response.success(res, data);
+});
+
+/* GET checkin by gues tid */
 router.get('/:guestId', async function(req, res, next) {
   const data = await model.getData(req.params.guestId);
   response.success(res, data);
 });
 
+/* VERIFY AND ADD checkin */
 router.post('/', async function(req, res, next) {
   if (req.body.checkin_code) {
     const guest = await modelGuest.getRowByCode(req.body.checkin_code);
@@ -64,6 +73,16 @@ router.post('/', async function(req, res, next) {
     return response.error(res, 'Invalid check in code');
   }
   response.error(res, 400);
+});
+
+
+/* SAVE checkin config. */
+router.post('/config', async function (req, res, next) {
+  const save = await modelConfig.saveConfig(req.body);
+  if (save) {
+    return response.success(res, await model.getConfig());
+  }
+  response.error(res, 500);
 });
 
 
