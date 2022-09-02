@@ -161,28 +161,28 @@
           <v-simple-table
               fixed-header
             >
-              <template v-slot:default>
-                <thead>
-                  <tr>
-                    <th class="text-left">
-                      Time
-                    </th>
-                    <th class="text-left">
-                      Manual Check In
-                    </th>
-                  </tr>
-                </thead>
-                <tbody v-if="historyData.checkin_history">
-                  <tr
-                    v-for="item in historyData.checkin_history"
-                    :key="item._id"
-                  >
-                    <td>{{ $moment.unix(item.time).format('Y-MM-DD HH:mm:ss') }}</td>
-                    <td><v-icon v-if="item.manual">mdi-check-circle</v-icon></td>
-                  </tr>
-                </tbody>
-              </template>
-            </v-simple-table>
+            <template v-slot:default>
+              <thead>
+                <tr>
+                  <th class="text-left">
+                    Time
+                  </th>
+                  <th class="text-left">
+                    Manual Check In
+                  </th>
+                </tr>
+              </thead>
+              <tbody v-if="historyData.checkin_history">
+                <tr
+                  v-for="item in historyData.checkin_history"
+                  :key="item._id"
+                >
+                  <td>{{ $moment.unix(item.time).format('Y-MM-DD HH:mm:ss') }}</td>
+                  <td><v-icon v-if="item.manual">mdi-check-circle</v-icon></td>
+                </tr>
+              </tbody>
+            </template>
+          </v-simple-table>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -225,7 +225,7 @@ export default {
     console.log('Timer initiated');
     this.loadTimer = setInterval(() => this.loadData(), this.refresh_rate * 1000);
   },
-  destroyed() {
+  beforeDestroy() {
     console.log('Timer cleared');
     clearInterval(this.loadTimer);
   },
@@ -308,16 +308,18 @@ export default {
       return columns;
     },
     headersCheckIn() {
-      let columns = [...this.headers];
-      columns.push({
-        text: "LAST CHECK IN",
-        value: "last_checkin"
-      });
-      columns.push({
-        text: "ACTIONS",
-        value: "actions",
-        sortable: false
-      });
+      const columns = [...this.headers];
+      if (columns) {
+        columns.push({
+          text: "LAST CHECK IN",
+          value: "last_checkin"
+        });
+        columns.push({
+          text: "ACTIONS",
+          value: "actions",
+          sortable: false
+        });
+      }
       return columns;
     },
     sparklineData() {

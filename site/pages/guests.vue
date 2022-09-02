@@ -295,28 +295,28 @@
             <v-simple-table
                 fixed-header
               >
-                <template v-slot:default>
-                  <thead>
-                    <tr>
-                      <th class="text-left">
-                        Time
-                      </th>
-                      <th class="text-left">
-                        Manual Check In
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr
-                      v-for="item in historyData.checkin_history"
-                      :key="item.id"
-                    >
-                      <td>{{ $moment.unix(item.time).format('Y-MM-DD HH:mm:ss') }}</td>
-                      <td><v-icon v-if="item.manual">mdi-check-circle</v-icon></td>
-                    </tr>
-                  </tbody>
-                </template>
-              </v-simple-table>
+              <template v-slot:default>
+                <thead>
+                  <tr>
+                    <th class="text-left">
+                      Time
+                    </th>
+                    <th class="text-left">
+                      Manual Check In
+                    </th>
+                  </tr>
+                </thead>
+                <tbody v-if="historyData.checkin_history">
+                  <tr
+                    v-for="item in historyData.checkin_history"
+                    :key="item._id"
+                  >
+                    <td>{{ $moment.unix(item.time).format('Y-MM-DD HH:mm:ss') }}</td>
+                    <td><v-icon v-if="item.manual">mdi-check-circle</v-icon></td>
+                  </tr>
+                </tbody>
+              </template>
+            </v-simple-table>
           </v-card-text>
         </v-card>
       </v-dialog>
@@ -358,6 +358,7 @@ export default {
   methods: {
     loadGuests() {
       this.$store.dispatch("guest/load");
+      this.$store.dispatch("checkin/load");
     },
     openImportDialog() {
       this.importInput = null;
@@ -430,7 +431,7 @@ export default {
         }
       }
     },
-    async guestListXLSX() {
+    guestListXLSX() {
       this.downloading = true;
       var data = [];
       // add header row
@@ -465,15 +466,16 @@ export default {
           headerRow.push(h.text);
         }
       }
-      headerRow.push("Check In Code");
-      headerRow.push("Check In Time");
-      headerRow.push("Check In Manual");
+      headerRow.push("LAST CHECK IN");
+      headerRow.push("MANUAL CHECK IN");
       data.push(headerRow);
       // add data rows
       for (let g of this.guests) {
         if (g.checkin_history) {
           for (let idx in g.checkin_history) {
             let row = [];
+
+            // add row ordered by headers
             for (let h of this.headers) {
               if (idx == 0) {
                 row.push(g[h.value]);
@@ -482,7 +484,7 @@ export default {
                 row.push("");
               }
             }
-            row.push(idx == 0 ? g["_checkin_code"] : "");
+
             row.push(this.$moment.unix(g.checkin_history[idx].time).format("Y-MM-DD HH:mm:ss"));
             row.push(g.checkin_history[idx].manual);
             data.push(row);
@@ -493,7 +495,6 @@ export default {
           for (let h of this.headers) {
             row.push(g[h.value]);
           }
-          row.push(g["_checkin_code"]);
           data.push(row);
         }
       }
@@ -638,22 +639,46 @@ export default {
           });
       }
     },
-    async showHistory(item) {
+    showHistory(item) {
       this.historyDialog = true;
-      this.historyData = {...item};
-      this.historyData.checkin_history = await this.$axios.$get('checkin/'+this.historyData.id);
-    },
+      this.historyData = item;
+    }
   },
   computed: {
     guests() {
-      return this.$store.state.guest.list;
+      const guests = this.$store.state.guest.list;
+      const checkin = this.$store.state.checkin.list;
+
+      if (guests && checkin) {
+        let checkinGuestId = {};
+        for (let row of checkin) {
+          if (row.guest_id in checkinGuestId) {
+            checkinGuestId[row.guest_id].push(row);
+          } else {
+            checkinGuestId[row.guest_id] = [row];
+          }
+        }
+
+        for (let row of guests) {
+          if (checkinGuestId[row.id]) {
+            row.last_checkin = this.$moment.unix(checkinGuestId[row.id][0].time).format('Y-MM-DD HH:mm:ss');
+            row.checkin_history = checkinGuestId[row.id];
+          }
+        }
+      }
+
+      return guests;
     },
     headers() {
       return this.$store.state.guest.columns;
     },
     headersTable() {
-      let columns = [...this.headers];
+      const columns = [...this.headers];
       if (columns.length > 0) {
+        columns.push({
+          text: "LAST CHECK IN",
+          value: "last_checkin"
+        });
         columns.push({
           text: "ACTIONS",
           value: "actions",

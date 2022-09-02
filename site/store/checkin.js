@@ -20,29 +20,6 @@ export const actions = {
       });
   },
 
-  submit(state, {checkin_code, manual}) {
-    let value = {
-      success: false,
-      data: {
-        message: '',
-        time:0
-      }
-    }
-    this.$axios.$post('checkin', {checkin_code: checkin_code, manual: manual ?? false})
-      .then((res) => {
-        value.success = true;
-        value.data.message = res.message;
-        value.data.time = res.time;
-      })
-      .catch((err) => {
-        value.message = err.response.data;
-      })
-      .then(() => {
-        value.data.message = value.data.message.replace(/(?:\r\n|\r|\n)/g, '<br>');
-        return value;
-      });
-  },
-
   byGuest(state, guestId) {
     this.$axios.$get('checkin/'+guestId)
       .then((res) => {

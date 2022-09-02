@@ -128,7 +128,7 @@ export default {
 
       clearTimeout(this.successTimeout);
       this.checkinSuccess = success;
-      this.checkinMessage = data.message;
+      this.checkinMessage = data.message.replace(/(?:\r\n|\r|\n)/g, '<br>');
       this.checkinTime = data.time;
 
       let duration = 3;
