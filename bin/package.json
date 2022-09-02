@@ -1,0 +1,16 @@
+{
+  "name": "bin",
+  "version": "1.0.0",
+  "description": "",
+  "main": "genenv.js",
+  "scripts": {
+    "start": "node genenv.js && concurrently \"cd ../api-node && npm install && npm run dev\" \"cd ../site && npm install && npm run dev\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "concurrently": "^7.3.0",
+    "dotenv": "^16.0.2"
+  }
+}

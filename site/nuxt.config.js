@@ -56,11 +56,6 @@ export default {
     baseURL: process.env.API_URL || 'http://localhost:5001',
   },
 
-  privateRuntimeConfig: {
-    axios: {
-      baseURL: `{${process.env.API_HOST}:${process.env.API_PORT}`
-    }
-  },
 
   // Vuetify module configuration: https://go.nuxtjs.dev/config-vuetify
   vuetify: {
@@ -103,7 +98,7 @@ export default {
   },
 
   server: {
-    host: process.env.SITE_HOST || '0',
-    port: process.env.SITE_PORT || 3000 // optional
+    host: '0.0.0.0',
+    port: process.env.SITE_PORT || 5000 // optional
   }
 }

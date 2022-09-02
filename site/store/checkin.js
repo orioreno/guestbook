@@ -57,6 +57,7 @@ export const actions = {
   loadConfig(state) {
     this.$axios.$get('checkin/config')
       .then((res) => {
+        if (!res) res = {};
 
         if (!res.font_color) res.font_color = {r:255, g:255, b:255, a:1};
         if (!res.box_input_color) res.box_input_color = {r:255, g:255, b:255, a:1};

@@ -1,7 +1,7 @@
 const sqlite3 = require('sqlite3').verbose()
 const fs = require('fs')
-const dir = process.env.DBDIR;
-const filename = process.env.DBNAME;
+const dir = process.env.DBDIR || "db";
+const filename = process.env.DBNAME || "guestbook.db";
 
 
 // Create db directory if not exist
