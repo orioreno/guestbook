@@ -101,8 +101,7 @@
           :items="guests.filter((val) => { return !val.last_checkin})"
           :search="search"
           :loading="loading"
-          sort-by="last_checkin"
-          :sort-desc="true"
+          sort-by="name"
           loading-text="Loading data"
         >
         </v-data-table>
