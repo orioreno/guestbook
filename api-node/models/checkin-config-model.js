@@ -57,19 +57,21 @@ module.exports = function(selectedEvent) {
         }
       }
 
-      const existing = await this.getConfig();
-      if (existing) {
-        input.modified = moment().unix();
-        const update = await knex(tableName)
-          .where('event_id', '=', selectedEvent.id)
-          .update(input);
-        if (update) return true;
-      } else {
-        input.event_id = selectedEvent.id;
-        input.created = moment().unix();
-        const insert = await knex(tableName)
-          .insert(input);
-        if (insert) return true;
+      if (input) {
+        const existing = await this.getConfig();
+        if (existing) {
+          input.modified = moment().unix();
+          const update = await knex(tableName)
+            .where('event_id', '=', selectedEvent.id)
+            .update(input);
+          if (update) return true;
+        } else {
+          input.event_id = selectedEvent.id;
+          input.created = moment().unix();
+          const insert = await knex(tableName)
+            .insert(input);
+          if (insert) return true;
+        }
       }
       return false;
     }

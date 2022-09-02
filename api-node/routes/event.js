@@ -1,37 +1,31 @@
 var express = require('express');
 var router = express.Router();
 var model = require('../models/event-model.js')();
-var response = require('../plugins/response.js');
 
 /* GET event listing. */
 router.get('/', async function(req, res, next) {
-  const data = await model.getData();
-  response.success(res, data);
+  res.json(await model.getData());
 });
 
 /* GET selected event. */
 router.get('/selected', async function(req, res, next) {
-  const selected = await model.getSelected();
-  if (selected) {
-    return response.success(res, selected);
-  }
-  response.error(res, 'No event selected');
+  res.json(await model.getSelected());
 });
 
 /* GET event row by id. */
 router.get('/:id', async function(req, res, next) {
-  const row = await model.getRow(req.params.id);
-  response.success(res, row);
+  res.json(await model.getRow(req.params.id));
 });
 
 /* ADD event. */
 router.post('/', async function(req, res, next) {
   if (req.body.name && req.body.password) {
     const add = await model.add(req.body.name, req.body.password);
-    if (Number.isInteger(add)) return response.success(res, await model.getRow(add));
-    return response.error(res, add);
+    if (Number.isInteger(add)) return res.json(await model.getRow(add));
+
+    return res.status(580).json(add);
   }
-  response.error(res, 400);
+  res.send(400);
 });
 
 /* VERIFY selected event password. */
@@ -40,43 +34,41 @@ router.post('/selected/verify', async function(req, res, next) {
     const selected = await model.getSelected();
     if (selected) {
       if (await model.verify(selected.id, req.body.password)) {
-        return response.success(res, "Password verified");
+        return res.json("Password verified");
       }
     }
-    return response.error(res, 401);
+    return res.send(401);
   }
-  response.error(res, 400);
+  res.send(400);
 });
 
 /* VERIFY event password by id. */
 router.post('/verify/:id', async function(req, res, next) {
   if (req.body.password) {
     if (await model.verify(req.params.id, req.body.password)) {
-      return response.success(res, "Password verified");
+      return res.json("Password verified");
     }
-    return response.error(res, 401);
+    return res.send(401);
   }
-  response.error(res, 400);
+  res.send(400);
 });
 
 /* EDIT selected event. */
 router.patch('/', async function(req, res, next) {
   const edit = await model.edit(req.body);
   if (edit === true) {
-    return response.success(res, await model.getSelected());
+    return res.json(await model.getSelected());
   } else if (edit !== false) {
-    return response.error(res, edit);
+    return res.status(580).json(edit);
   }
-  response.error(res, 400);
+  res.send(400);
 });
 
 /* CHANGE selected event. */
 router.patch('/select/:id', async function(req, res, next) {
-  const change = await model.changeSelected(req.params.id);
-  if (change === true) {
-    return response.success(res, 'Selected event has been changed');
-  }
-  response.error(res, 400);
+  const selected = await model.changeSelected(req.params.id);
+  if (selected) return res.json(selected);
+  res.send(400);
 });
 
 

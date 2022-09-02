@@ -171,20 +171,26 @@ export default {
     };
   },
   methods: {
-    async changeEvent() {
-      const resp = await this.$store.dispatch('event/select', {id: this.changeTo.id, password: this.password});
-      if (resp === true) {
-        document.cookie = "evtData=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/";
-        window.location.href = '.';
-      } else {
-        this.password = '';
-        this.passwordError = resp;
-      }
+    changeEvent() {
+      this.$axios.$post('event/verify/'+this.changeTo.id, {password: this.password})
+        .then((res) => {
+          this.$axios.$patch('/event/select/'+this.changeTo.id)
+            .then((res) => {
+              this.$store.commit("snackbar/show", {text: "Event changed to " + res.name + "!"});
+              window.location.reload(true);
+            })
+            .catch((err) => {
+              this.$store.commit("snackbar/show", {text: "Failed to change event", color: 'error'});
+            })
+        })
+        .catch((err) => {
+          this.password = '';
+          this.passwordError = err.response.status == 401 ? 'Password does not match' : err.response.data;
+        });
     }
   },
   mounted() {
     this.$store.commit("navbar/loadLocalSettings");
-    this.$store.dispatch("event/selected");
     this.$store.dispatch("event/load");
   },
   computed: {

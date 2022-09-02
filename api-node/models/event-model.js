@@ -106,9 +106,9 @@ module.exports = function() {
     },
 
     async changeSelected(id) {
-      const existing = await this.getRow(id);
+      const changeTo = await this.getRow(id);
 
-      if (existing) {
+      if (changeTo) {
         await knex(tableName)
           .where('id', '<>', id)
           .update({selected: 0});
@@ -117,7 +117,7 @@ module.exports = function() {
           .where('id', '=', id)
           .update({selected: 1});
 
-        return true;
+        return changeTo;
       }
       return false;
     },

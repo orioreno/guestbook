@@ -78,12 +78,14 @@ export default {
   },
   methods: {
     async save() {
-      const resp = await this.$store.dispatch('event/add', {name: this.name, password: this.password});
-      if (resp === true) {
-        window.location.reload(true);
-        return;
-      }
-      alert(resp);
+      this.$axios.$post('event', {name: this.name, password: this.password})
+        .then((resp) => {
+          this.$store.commit("snackbar/show", {text: 'New event ' + this.name + ' created!'});
+          window.location.reload(true);
+        })
+        .catch((err) => {
+          this.$store.commit("snackbar/show", {text: err, color: 'error'});
+        });
     }
   }
 }

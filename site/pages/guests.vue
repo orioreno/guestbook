@@ -226,7 +226,7 @@
             {{ qrData.name }}
           </v-card-title>
           <v-card-subtitle>
-            {{ qrData._checkin_code }}
+            {{ qrData.checkin_code }}
           </v-card-subtitle>
           <v-card-text>
             <div class="px-5 py-5 text-center rounded" style="background:white" ref="qrcode" id="qrcode"></div>
@@ -289,7 +289,7 @@
             {{ historyData.name }}
           </v-card-title>
           <v-card-subtitle>
-            {{ historyData._checkin_code }}
+            {{ historyData.checkin_code }}
           </v-card-subtitle>
           <v-card-text>
             <v-simple-table
@@ -306,9 +306,9 @@
                       </th>
                     </tr>
                   </thead>
-                  <tbody v-if="historyData._checkin_log">
+                  <tbody>
                     <tr
-                      v-for="item in historyData._checkin_log"
+                      v-for="item in historyData.checkin_history"
                       :key="item.id"
                     >
                       <td>{{ $moment.unix(item.time).format('Y-MM-DD HH:mm:ss') }}</td>
@@ -352,7 +352,7 @@ export default {
       cloneValid: false,
       cloneEventId: null,
       historyDialog: false,
-      historyData: {}
+      historyData: {},
     };
   },
   methods: {
@@ -405,20 +405,29 @@ export default {
         reader.readAsBinaryString(this.importInput);
       }
     },
-    async uploadImportFile() {
+    uploadImportFile() {
       if (this.guests.length <= 0 || confirm("Current data will be replaced and attendance history will be cleared. Are you sure?")) {
         this.savingGuest = true;
-        const resp = await this.$store.dispatch("guest/import", this.importData);
-        if (resp === true) {
-          this.importData = [];
-          this.importInput = null;
-          this.importDialog = false;
-          this.$store.commit("snackbar/show", {text: 'Guest(s) has been imported'});
-        } else {
-          this.$store.commit("snackbar/show", {text: resp, color: 'error'});
+
+        if (this.importData.length > 0) {
+          this.$axios.$put('guest', this.importData)
+            .then((resp) => {
+              const errors = [];
+              for (const row of resp) {
+                if (typeof row == 'string') errors.push(row);
+              }
+              if (errors.length > 0) return this.$store.commit("snackbar/show", {text: errors.join("<br/>"), color: 'warning'});
+              this.$store.commit("snackbar/show", {text: resp.length + ' guest(s) has been imported'});
+              this.importDialog = false;
+            })
+            .catch((err) => {
+              this.$store.commit("snackbar/show", {text: err.response.data});
+            })
+            .then(() => {
+              this.loadGuests();
+              this.savingGuest = false;
+            });
         }
-        this.loadGuests();
-        this.savingGuest = false;
       }
     },
     async guestListXLSX() {
@@ -462,8 +471,8 @@ export default {
       data.push(headerRow);
       // add data rows
       for (let g of this.guests) {
-        if (g._checkin_log) {
-          for (let idx in g._checkin_log) {
+        if (g.checkin_history) {
+          for (let idx in g.checkin_history) {
             let row = [];
             for (let h of this.headers) {
               if (idx == 0) {
@@ -474,8 +483,8 @@ export default {
               }
             }
             row.push(idx == 0 ? g["_checkin_code"] : "");
-            row.push(this.$moment.unix(g._checkin_log[idx].time).format("Y-MM-DD HH:mm:ss"));
-            row.push(g._checkin_log[idx].manual);
+            row.push(this.$moment.unix(g.checkin_history[idx].time).format("Y-MM-DD HH:mm:ss"));
+            row.push(g.checkin_history[idx].manual);
             data.push(row);
           }
         }
@@ -533,87 +542,114 @@ export default {
       this.guestFormData = guest ? { ...guest } : {};
       this.guestFormDialog = true;
     },
-    async deleteGuest(guest) {
+    deleteGuest(guest) {
       if (confirm("Do you want to remove " + guest.name + " from guest list?")) {
         this.savingGuest = true;
-        const resp = await this.$store.dispatch("guest/delete", guest.id);
-        if (resp === true) {
-          this.$store.commit("snackbar/show", {text: guest.name + " has been deleted"});
-          this.loadGuests();
-        } else {
-          this.$store.commit("snackbar/show", {text: resp, color: 'error'});
-        }
-        this.savingGuest = false;
+        this.$axios.$delete('guest/'+guest.id)
+          .then((res) => {
+            this.$store.commit("snackbar/show", {text: guest.name + " has been deleted"});
+          })
+          .catch((err) => {
+            this.$store.commit("snackbar/show", {text: err.response.data, color: 'error'});
+          })
+          .then(() => {
+            this.savingGuest = false;
+            this.loadGuests();
+          })
       }
     },
-    async saveGuest() {
+    saveGuest() {
       let data = {};
       for (let header of this.headers) {
         data[header.value] = this.guestFormData[header.value];
       }
       if (data) {
         this.savingGuest = true;
-        let storeMethod = "guest/add";
         if (this.guestFormData.id) {
-          data.id = this.guestFormData.id;
-          storeMethod = "guest/edit";
-        }
-        const resp = await this.$store.dispatch(storeMethod, data);
-        if (resp === true) {
-          this.$store.commit("snackbar/show", {text: data.name + " has been saved"});
-          this.guestFormDialog = false;
-          this.loadGuests();
+          this.$axios.$patch('guest/'+this.guestFormData.id, data)
+            .then((res) => {
+              this.$store.commit("snackbar/show", {text: res.name + " has been saved"});
+              this.guestFormDialog = false;
+            })
+            .catch((err) => {
+              this.$store.commit("snackbar/show", {text: err.response.data, color: 'error'});
+            })
+            .then(() => {
+              this.savingGuest = false;
+              this.loadGuests();
+            });
         } else {
-          this.$store.commit("snackbar/show", {text: resp, color: 'error'});
+          this.$axios.$post('guest', data)
+            .then((res) => {
+              this.$store.commit("snackbar/show", {text: res.name + " has been saved"});
+              this.guestFormDialog = false;
+            })
+            .catch((err) => {
+              this.$store.commit("snackbar/show", {text: err.response.data, color: 'error'});
+            })
+            .then(() => {
+              this.savingGuest = false;
+              this.loadGuests();
+            });
         }
-        this.savingGuest = false;
       }
     },
     openCloneDialog() {
       this.cloneEventId = null;
       this.cloneDialog = true;
     },
-    async cloneGuest() {
+    cloneGuest() {
       if (this.guests.length <= 0 || confirm("Current guests will be replaced and attendance history will be cleared. Are you sure?")) {
         this.savingGuest = true;
-        const resp = await this.$store.dispatch("guest/clone", this.cloneEventId);
-        if (resp === true) {
-          this.$store.commit("snackbar/show", {text: 'Guest(s) has been replaced'});
-          this.cloneDialog = false;
-        } else {
-          this.$store.commit("snackbar/show", {text: resp, color: 'error'});
-        }
-        this.loadGuests();
-        this.savingGuest = false;
+        this.$axios.$put('guest/clone/'+this.cloneEventId)
+          .then((resp) => {
+            const errors = [];
+            for (const row of resp) {
+              if (typeof row == 'string') errors.push(row);
+            }
+            if (errors.length > 0) return this.$store.commit("snackbar/show", {text: errors.join("<br/>"), color: 'warning'});
+            this.$store.commit("snackbar/show", {text: resp.length + ' guest(s) has been imported'});
+            this.cloneDialog = false;
+          })
+          .catch((err) => {
+            this.$store.commit("snackbar/show", {text: err.response.data});
+          })
+          .then(() => {
+            this.loadGuests();
+            this.savingGuest = false;
+          });
       }
     },
-    async manualCheckIn(guest) {
+    manualCheckIn(guest) {
       if (confirm("Manual check in for " + guest.name + " (" + guest.checkin_code + "). Proceed?")) {
-        let checkin = await this.$store.dispatch("checkin/submit", { checkin_code: guest.checkin_code, manual: true });
-        if (checkin.success === true) {
-          this.$store.commit("snackbar/show", {text: checkin.data.message});
-        } else {
-          this.$store.commit("snackbar/show", {text: checkin.data.message, color: 'error'});
-        }
-        this.loadGuests();
+        const snackbarData = {
+          text: ''
+        };
+        this.$axios.$post('checkin', {checkin_code: guest.checkin_code, manual: true})
+          .then((res) => {
+            snackbarData.text = res.message;
+          })
+          .catch((err) => {
+            snackbarData.color = 'error';
+            snackbarData.text = err.response.data;
+          })
+          .then(() => {
+            this.$store.commit("snackbar/show", snackbarData);
+          });
       }
     },
-    showHistory(item) {
+    async showHistory(item) {
       this.historyDialog = true;
-      this.historyData = item;
+      this.historyData = {...item};
+      this.historyData.checkin_history = await this.$axios.$get('checkin/'+this.historyData.id);
     },
-    showHistory(item) {
-      this.historyDialog = true;
-      this.historyData = item;
-    }
   },
   computed: {
     guests() {
-      var data = [...this.$store.state.guest.list];
-      return data;
+      return this.$store.state.guest.list;
     },
     headers() {
-      return [...this.$store.state.guest.columns];
+      return this.$store.state.guest.columns;
     },
     headersTable() {
       let columns = [...this.headers];

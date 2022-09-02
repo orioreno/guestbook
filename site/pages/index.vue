@@ -98,10 +98,10 @@
       <v-card-text>
         <v-data-table
           :headers="headers"
-          :items="guests.filter((val) => { return !val._checkin_time})"
+          :items="guests.filter((val) => { return !val.last_checkin})"
           :search="search"
           :loading="loading"
-          sort-by="_checkin_time"
+          sort-by="last_checkin"
           :sort-desc="true"
           loading-text="Loading data"
         >
@@ -124,10 +124,10 @@
       <v-card-text>
         <v-data-table
           :headers="headersCheckIn"
-          :items="guests.filter((val) => { return val._checkin_time})"
+          :items="guests.filter((val) => { return val.last_checkin})"
           :search="search"
           :loading="loading"
-          sort-by="_checkin_time"
+          sort-by="last_checkin"
           :sort-desc="true"
           loading-text="Loading data"
         >
@@ -155,7 +155,7 @@
           {{ historyData.name }}
         </v-card-title>
         <v-card-subtitle>
-          {{ historyData._checkin_code }}
+          {{ historyData.checkin_code }}
         </v-card-subtitle>
         <v-card-text>
           <v-simple-table
@@ -172,9 +172,9 @@
                     </th>
                   </tr>
                 </thead>
-                <tbody v-if="historyData._checkin_log">
+                <tbody v-if="historyData.checkin_history">
                   <tr
-                    v-for="item in historyData._checkin_log"
+                    v-for="item in historyData.checkin_history"
                     :key="item._id"
                   >
                     <td>{{ $moment.unix(item.time).format('Y-MM-DD HH:mm:ss') }}</td>
@@ -210,8 +210,9 @@ export default {
     };
   },
   methods: {
-    async loadGuests() {
-      await this.$store.dispatch("guest/loadGuests");
+    loadData() {
+      this.$store.dispatch("guest/load");
+      this.$store.dispatch("checkin/load");
       this.last_update = this.$moment().format("Y-MM-DD HH:mm:ss");
     },
     showHistory(item) {
@@ -219,10 +220,10 @@ export default {
       this.historyData = item;
     }
   },
-  created() {
-    this.loadGuests();
+  mounted() {
+    this.loadData();
     console.log('Timer initiated');
-    this.loadTimer = setInterval(() => this.loadGuests(), this.refresh_rate * 1000);
+    this.loadTimer = setInterval(() => this.loadData(), this.refresh_rate * 1000);
   },
   destroyed() {
     console.log('Timer cleared');
@@ -230,20 +231,38 @@ export default {
   },
   computed: {
     guests() {
-      var data = this.$store.state.guest.list;
-      for (let row of data) {
-        if (row._checkin_log) {
-          row._checkin_time = this.$moment.unix(row._checkin_log[0].time).format("Y-MM-DD HH:mm:ss");
+      const guests = this.$store.state.guest.list;
+      const checkin = this.$store.state.checkin.list;
+
+      if (guests && checkin) {
+        let checkinGuestId = {};
+        for (let row of checkin) {
+          if (row.guest_id in checkinGuestId) {
+            checkinGuestId[row.guest_id].push(row);
+          } else {
+            checkinGuestId[row.guest_id] = [row];
+          }
+        }
+
+        for (let row of guests) {
+          if (checkinGuestId[row.id]) {
+            row.last_checkin = this.$moment.unix(checkinGuestId[row.id][0].time).format('Y-MM-DD HH:mm:ss');
+            row.checkin_history = checkinGuestId[row.id];
+          }
         }
       }
-      return data;
+
+      return guests;
     },
     totalCheckin() {
-      return this.guests.reduce((total, row) => {
-        if (row._checkin_time)
-          total++;
-        return total;
-      }, 0);
+      if (this.guests) {
+        return this.guests.reduce((total, row) => {
+          if (row.last_checkin)
+            total++;
+          return total;
+        }, 0);
+      }
+      return 0;
     },
     checkinPercent() {
       return this.guests.length > 0 ? (this.totalCheckin / this.guests.length) * 100 : 0;
@@ -251,13 +270,13 @@ export default {
     checkin_log() {
       var data = [];
       for (let row of this.guests) {
-        if (row._checkin_log) {
-          for (let checkin of row._checkin_log) {
+        if (row.checkin_history) {
+          for (let checkin of row.checkin_history) {
             data.push({
               "time": checkin.time,
               "manual": checkin.manual,
               "name": row.name,
-              "checkin_code": row._checkin_code
+              "checkin_code": row.checkin_code
             });
           }
         }
@@ -285,21 +304,17 @@ export default {
       }
     },
     headers() {
-      var columns = [...this.$store.state.guest.columns];
-      columns.push({
-        text: "Check In Code",
-        value: "_checkin_code"
-      });
+      var columns = this.$store.state.guest.columns;
       return columns;
     },
     headersCheckIn() {
       let columns = [...this.headers];
       columns.push({
-        text: "Last Check In Time",
-        value: "_checkin_time"
+        text: "LAST CHECK IN",
+        value: "last_checkin"
       });
       columns.push({
-        text: "Actions",
+        text: "ACTIONS",
         value: "actions",
         sortable: false
       });

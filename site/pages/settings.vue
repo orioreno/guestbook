@@ -1,6 +1,6 @@
 <template>
   <div>
-    <PasswordVerification :verified="loadData">
+    <PasswordVerification :verified="loadCheckinConfig">
       <v-expansion-panels v-model="panel" v-if="event">
         <v-expansion-panel>
           <v-expansion-panel-header>General</v-expansion-panel-header>
@@ -282,23 +282,24 @@ export default {
     };
   },
   methods: {
-    loadData() {
-      this.$store.dispatch("event/load");
-      this.$store.dispatch("event/selected");
+    loadCheckinConfig() {
       this.$store.dispatch("checkin/loadConfig");
     },
-    async saveEvent() {
+    saveEvent() {
       this.loading = true;
-      const resp = await this.$store.dispatch("event/update", this.event);
-      if (resp === true) {
-        this.$store.commit("snackbar/show", {text: 'General settings has been saved'});
-        this.loadData();
-      } else {
-        this.$store.commit("snackbar/show", {text: resp, color: 'error'});
-      }
-      this.loading = false;
+      this.$axios.$patch('event', this.event)
+        .then((res) => {
+          this.$store.commit("snackbar/show", {text: 'General settings has been saved'});
+          this.$store.dispatch("event/load");
+        })
+        .catch((err) => {
+          this.$store.commit("snackbar/show", {text: err.response.data, color: 'error'});
+        })
+        .then(() => {
+          this.loading = false;
+        });
     },
-    async saveCheckinConfig() {
+    saveCheckinConfig() {
       this.loading = true;
       if (this.tempBackgroundImage !== this.checkinConfig.background_image)
         this.checkinConfig.background_image = this.tempBackgroundImage;
@@ -306,28 +307,37 @@ export default {
         this.checkinConfig.success_audio = this.tempSuccessAudio;
       if (this.tempFailedAudio !== this.checkinConfig.failed_audio)
         this.checkinConfig.failed_audio = this.tempFailedAudio;
-      const resp = await this.$store.dispatch("checkin/saveConfig", this.checkinConfig);
-      if (resp === true) {
-        this.$store.commit("snackbar/show", {text: 'Check in configuration has been saved'});
-        this.loadData();
-      } else {
-        this.$store.commit("snackbar/show", {text: resp, color: 'error'});
-      }
-      this.loading = false;
+
+      this.$axios.$patch('checkin/config', this.checkinConfig)
+        .then((res) => {
+          this.$store.commit("snackbar/show", {text: 'Check in configuration has been saved'});
+          this.getCheckinConfig();
+        })
+        .catch((err) => {
+          this.$store.commit("snackbar/show", {text: err.response.data, color: 'error'});
+        })
+        .then(() => {
+          this.loading = false;
+        });
     },
-    async deactivate() {
+    deactivate() {
       if (this.deactivationPassword !== this.event.password) {
         return alert('Password does not match');
       }
-      if (confirm("Are you sure want to delete event " + this.$store.state.event.selected.name + "?")) {
+      if (confirm("Do you want to delete event " + this.$store.state.event.selected.name + "?")) {
         this.loading = true;
-        const resp = await this.$store.dispatch("event/delete");
-        if (resp === true) {
-          window.location.reload(true);
-        } else {
-          this.$store.commit("snackbar/show", {text: resp, color: 'error'});
-        }
-        this.loading = false;
+
+        this.$axios.$delete("event")
+          .then((res) => {
+            this.$store.commit("snackbar/show", {text: 'Event has been deleted'});
+            window.location.reload(true);
+          })
+          .catch((err) => {
+            this.$store.commit("snackbar/show", {text: err.response.data, color: 'error'});
+          })
+          .then(() => {
+            this.loading = false;
+          });
       }
     },
   },
@@ -359,21 +369,16 @@ export default {
   },
   computed: {
     event() {
-      let row = { ...this.$store.state.event.selected };
-      return row;
+      return { ...this.$store.state.event.selected };
     },
     checkinConfig() {
-      let row = { ...this.$store.state.checkin.config };
-      if (!row.font_color) row.font_color = {r:255, g:255, b:255, a:1};
-      if (!row.box_input_color) row.box_input_color = {r:255, g:255, b:255, a:1};
-      if (!row.text_input_color) row.text_input_color = {r:0, g:0, b:0, a:1};
-      if (!row.success_overlay_color) row.success_overlay_color = {r:76, g:175, b:80, a:0.7};
-      if (!row.failed_overlay_color) row.failed_overlay_color = {r:244, g:67, b:54, a:0.7};
-      if (row.background_image) this.tempBackgroundImage = row.background_image;
-      if (row.success_audio) this.tempSuccessAudio = row.success_audio;
-      if (row.failed_audio) this.tempFailedAudio = row.failed_audio;
-      return row;
-    },
+      let res = { ...this.$store.state.checkin.config };
+      if (res.background_image) this.tempBackgroundImage = res.background_image;
+      if (res.success_audio) this.tempSuccessAudio = res.success_audio;
+      if (res.failed_audio) this.tempFailedAudio = res.failed_audio;
+
+      return res;
+    }
   },
   components: { PasswordVerification }
 }

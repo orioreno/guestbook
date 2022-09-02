@@ -171,22 +171,37 @@ export default {
         return;
       }
     },
-    async submit(duration) {
+    submit(duration) {
       if (this.typed.length > 0) {
-        let checkin = await this.$store.dispatch('checkin/submit', {'checkin_code': this.typed});
-        this.showMessage(checkin.success, checkin.data, duration);
+        let success = false;
+        const data = {
+          message: '',
+          time:0
+        }
+        this.$axios.$post('checkin', {checkin_code: this.typed})
+          .then((res) => {
+            success = true;
+            data.message = res.message;
+            data.time = res.time;
+          })
+          .catch((err) => {
+            data.message = err.response.data;
+          })
+          .then(() => {
+            this.showMessage(success, data, duration);
+          });
       }
     },
-    async toggleFullscreen() {
+    toggleFullscreen() {
       if (this.fullscreen) {
-        await document.exitFullscreen();
+        document.exitFullscreen();
       } else {
         var element = document.querySelector("#scan");
-        await element.requestFullscreen();
+        element.requestFullscreen();
       }
       document.activeElement.blur();
     },
-    async toggleCamera() {
+    toggleCamera() {
       if (!this.qrcodeCameraScanner) {
         this.qrcodeCameraScanner = new Html5Qrcode("camera");
         interact('.camera-wrapper').draggable({
@@ -244,11 +259,10 @@ export default {
         this.cameraScannerY = e.clientY;
       }
     });
-    this.$store.dispatch("event/selected");
     this.$store.dispatch("checkin/loadConfig");
   },
   destroyed() {
-    window.removeEventListener('keydown', null, false);
+    // window.removeEventListener('keydown', null, false);
     document.removeEventListener('fullscreenchange', null, false);
     document.removeEventListener('onmousemove', null, false);
   },
@@ -257,16 +271,7 @@ export default {
       return this.$store.state.event.selected;
     },
     checkinConfig() {
-      let row = { ...this.$store.state.checkin.config };
-      if (!row.font_color) row.font_color = {r:255, g:255, b:255, a:1};
-      if (!row.box_input_color) row.box_input_color = {r:255, g:255, b:255, a:1};
-      if (!row.text_input_color) row.text_input_color = {r:0, g:0, b:0, a:1};
-      if (!row.success_overlay_color) row.success_overlay_color = {r:76, g:175, b:80, a:0.7};
-      if (!row.failed_overlay_color) row.failed_overlay_color = {r:244, g:67, b:54, a:0.7};
-      if (row.background_image) this.tempBackgroundImage = row.background_image;
-      if (row.success_audio) this.tempSuccessAudio = row.success_audio;
-      if (row.failed_audio) this.tempFailedAudio = row.failed_audio;
-      return row;
+      return this.$store.state.checkin.config;
     },
     bodyStyle() {
       var style = {};

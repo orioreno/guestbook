@@ -4,39 +4,67 @@ export const state = () => ({
 })
 
 export const mutations = {
-  setConfig(state, value) {
-    state.config = value;
-  },
   setList(state, value) {
     state.list = value;
   },
+  setConfig(state, value) {
+    state.config = value;
+  }
 }
 
 export const actions = {
-  async load(state) {
-
+  load(state) {
+    this.$axios.$get('checkin')
+      .then((res) => {
+        this.commit('checkin/setList', res);
+      });
   },
 
-  async submit(state, {checkin_code, manual}) {
-    const response = await this.$axios.$post('checkin', {checkin_code: checkin_code, manual: manual ?? false});
-    const message = response.code == 200 ? response.data.message : response.message;
-    return {
-      success: response.code == 200,
+  submit(state, {checkin_code, manual}) {
+    let value = {
+      success: false,
       data: {
-        message: message.replace(/(?:\r\n|\r|\n)/g, '<br>'),
-        time: response.code == 200 ? response.data.time : null
+        message: '',
+        time:0
       }
-    };
+    }
+    this.$axios.$post('checkin', {checkin_code: checkin_code, manual: manual ?? false})
+      .then((res) => {
+        value.success = true;
+        value.data.message = res.message;
+        value.data.time = res.time;
+      })
+      .catch((err) => {
+        value.message = err.response.data;
+      })
+      .then(() => {
+        value.data.message = value.data.message.replace(/(?:\r\n|\r|\n)/g, '<br>');
+        return value;
+      });
+  },
+
+  byGuest(state, guestId) {
+    this.$axios.$get('checkin/'+guestId)
+      .then((res) => {
+        return res;
+      })
+      .catch((err) => {
+        return {};
+      });
   },
 
   // CONFIG
-  async loadConfig(state) {
-    const response = await this.$axios.$get('checkin/config');
-    if (response.code == 200) this.commit('checkin/setConfig', response.data ?? {});
-  },
+  loadConfig(state) {
+    this.$axios.$get('checkin/config')
+      .then((res) => {
 
-  async saveConfig(state, config) {
-    const response = await this.$axios.$post('checkin/config', config);
-    return response.code == 200 ? true : response.message;
+        if (!res.font_color) res.font_color = {r:255, g:255, b:255, a:1};
+        if (!res.box_input_color) res.box_input_color = {r:255, g:255, b:255, a:1};
+        if (!res.text_input_color) res.text_input_color = {r:0, g:0, b:0, a:1};
+        if (!res.success_overlay_color) res.success_overlay_color = {r:76, g:175, b:80, a:0.7};
+        if (!res.failed_overlay_color) res.failed_overlay_color = {r:244, g:67, b:54, a:0.7};
+
+        this.commit('checkin/setConfig', res);
+      });
   }
 }
