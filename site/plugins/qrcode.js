@@ -19,6 +19,7 @@ export default (context, inject) => {
       height: 400,
       colorDark : "#000000",
       colorLight : "#ffffff",
+      quietZone: '10',
     }
 
     new QRCode(object, options);

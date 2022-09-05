@@ -1,1 +1,1 @@
-cd bin && npm install && npm run start
+cd runner && npm install && npm run start

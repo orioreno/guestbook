@@ -229,7 +229,7 @@
             {{ qrData.checkin_code }}
           </v-card-subtitle>
           <v-card-text>
-            <div class="px-5 py-5 text-center rounded" style="background:white" ref="qrcode" id="qrcode"></div>
+            <div class="text-center" ref="qrcode" id="qrcode"></div>
           </v-card-text>
         </v-card>
       </v-dialog>
