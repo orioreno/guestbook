@@ -25,7 +25,7 @@
           <!-- SCAN -->
           <form @submit.prevent="submit" v-show="checkinSuccess === null">
             <h1 class="mb-3">ENTER CHECK IN CODE</h1>
-            <input type="text" v-model="typed" id="input" class="text-uppercase" :style="boxInputStyle" ref="input" onblur="this.focus()" autofocus length="6" @keyup="onKeyup" maxlength="6">
+            <input type="text" v-model="typed" id="checkin_code" class="text-uppercase" ref="inpCheckinCode" :style="boxInputStyle" @keyup="onKeyup">
             <div class="mt-3" style="opacity:0.75;font-size:0.8em">
                 {{ clearTypedCounter > 0 && 3 >= clearTypedCounter ? 'Clearing in ' + clearTypedCounter + ' second...' : '&nbsp;' }}
             </div>
@@ -70,7 +70,7 @@
     background-position: center;
     background-size: cover;
   }
-  #input {
+  #checkin_code {
     background:white;
     border-radius:20px;
     border:none;
@@ -79,7 +79,7 @@
     font-family: "Montserrat";
     text-align:center;
     max-width:300px;
-    letter-spacing:10px;
+    letter-spacing:5px;
   }
   .camera-wrapper {
     touch-action: none;
@@ -128,7 +128,7 @@ export default {
 
       clearTimeout(this.successTimeout);
       this.checkinSuccess = success;
-      this.checkinMessage = data.message;
+      this.checkinMessage = data.message.replace(/(?:\r\n|\r|\n)/g, '<br>');
       this.checkinTime = data.time;
 
       let duration = 3;
@@ -241,30 +241,32 @@ export default {
         this.$refs.failedAudio.pause();
         this.$refs.failedAudio.currentTime = 0;
       }
-    }
-  },
-  mounted() {
-    window.addEventListener( "keydown", (e) => {
-      if (this.$refs.input) this.$refs.input.focus();
+    },
+    onKeydown(e) {
+      if (document.activeElement.tagName == 'BODY') this.$refs.inpCheckinCode.focus();
       this.checkinSuccess = null;
       this.stopAudio();
-    });
-    document.addEventListener('fullscreenchange', (e) => {
+    },
+    fullscreenChange(e) {
       this.fullscreen = !this.fullscreen;
-    });
-    document.addEventListener('onmousemove', (e) => {
+    },
+    onMouseMove(e) {
       if (this.moveCamera) {
-        console.log(e.clientX);
         this.cameraScannerX = e.clientX;
         this.cameraScannerY = e.clientY;
       }
-    });
+    }
+  },
+  mounted() {
+    addEventListener( "keydown", this.onKeydown);
+    addEventListener('fullscreenchange', this.fullscreenChange);
+    addEventListener('onmousemove', this.onMouseMove);
     this.$store.dispatch("checkin/loadConfig");
   },
-  destroyed() {
-    // window.removeEventListener('keydown', null, false);
-    document.removeEventListener('fullscreenchange', null, false);
-    document.removeEventListener('onmousemove', null, false);
+  beforeDestroy() {
+    removeEventListener( "keydown", this.onKeydown);
+    removeEventListener('fullscreenchange', this.fullscreenChange);
+    removeEventListener('onmousemove', this.onMouseMove);
   },
   computed: {
     event() {

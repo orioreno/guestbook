@@ -1,7 +1,7 @@
 <template>
   <div name="snackbars">
     <v-snackbar v-model="show" :color="color" :timeout="timeout">
-      <div v-html="text"></div>
+      <div v-html="text.replace(/(?:\r\n|\r|\n)/g, '<br>')"></div>
 
       <template v-slot:action="{ attrs }">
         <v-btn dark text v-bind="attrs" @click="show = false">
