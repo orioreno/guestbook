@@ -1,57 +1,59 @@
 <template>
   <div>
-    <div id="scan" v-if="event" :style="bodyStyle" style="position:relative">
-      <audio ref="successAudio">
-        <source :src="event.checkin_success_audio ?? defaultSuccessAudio">
-      </audio>
-      <audio ref="failedAudio">
-        <source :src="event.checkin_failed_audio ?? defaultFailedAudio">
-      </audio>
-      <div class="d-flex justify-center align-center" style="height:100vh;" :style="checkinBackgroundStyle">
-        <div class="text-center">
-          <!-- SUCCESS -->
-          <div v-if="checkinSuccess === true">
-            <h1 class="display-3" v-html="checkinMessage"></h1>
-            <div class="mt-5" style="opacity:0.75">
-              {{ $moment.unix(checkinTime).format('D MMM Y HH:mm:ss') }}
+    <PasswordVerification :verified="loadConfig">
+      <div id="scan" v-if="event" :style="bodyStyle" style="position:relative">
+        <audio ref="successAudio">
+          <source :src="event.checkin_success_audio ?? defaultSuccessAudio">
+        </audio>
+        <audio ref="failedAudio">
+          <source :src="event.checkin_failed_audio ?? defaultFailedAudio">
+        </audio>
+        <div class="d-flex justify-center align-center" style="height:100vh;" :style="checkinBackgroundStyle">
+          <div class="text-center">
+            <!-- SUCCESS -->
+            <div v-if="checkinSuccess === true">
+              <h1 class="display-3" v-html="checkinMessage"></h1>
+              <div class="mt-5" style="opacity:0.75">
+                {{ $moment.unix(checkinTime).format('D MMM Y HH:mm:ss') }}
+              </div>
             </div>
-          </div>
 
-          <!-- FAILED -->
-          <div v-else-if="checkinSuccess == false">
-            <h1 class="text-center display-3" v-html="checkinMessage"></h1>
-          </div>
-
-          <!-- SCAN -->
-          <form @submit.prevent="submit" v-show="checkinSuccess === null">
-            <h1 class="mb-3">ENTER CHECK IN CODE</h1>
-            <input type="text" v-model="typed" id="checkin_code" class="text-uppercase" ref="inpCheckinCode" :style="boxInputStyle" @keyup="onKeyup">
-            <div class="mt-3" style="opacity:0.75;font-size:0.8em">
-                {{ clearTypedCounter > 0 && 3 >= clearTypedCounter ? 'Clearing in ' + clearTypedCounter + ' second...' : '&nbsp;' }}
+            <!-- FAILED -->
+            <div v-else-if="checkinSuccess == false">
+              <h1 class="text-center display-3" v-html="checkinMessage"></h1>
             </div>
-          </form>
-        </div>
-        <v-btn-toggle
-          multiple
-          class="actions"
-          rounded
-        >
-          <v-btn
-            @click.stop="toggleCamera"
-            :title="camera ? 'Close camera' : 'Open camera'">
-            <v-icon>{{ camera ? 'mdi-camera-off' : 'mdi-camera' }}</v-icon>
-          </v-btn>
-          <v-btn
-            @click.stop="toggleFullscreen"
-            :title="fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'">
-            <v-icon>{{ fullscreen ? 'mdi-fullscreen-exit' : 'mdi-fullscreen' }}</v-icon>
-          </v-btn>
-        </v-btn-toggle>
-        <div class="camera-wrapper">
-          <div id="camera" class="mr-3"></div>
+
+            <!-- SCAN -->
+            <form @submit.prevent="submit" v-show="checkinSuccess === null">
+              <h1 class="mb-3">ENTER CHECK IN CODE</h1>
+              <input type="text" v-model="typed" id="checkin_code" class="text-uppercase" ref="inpCheckinCode" :style="boxInputStyle" @keyup="onKeyup">
+              <div class="mt-3" style="opacity:0.75;font-size:0.8em">
+                  {{ clearTypedCounter > 0 && 3 >= clearTypedCounter ? 'Clearing in ' + clearTypedCounter + ' second...' : '&nbsp;' }}
+              </div>
+            </form>
+          </div>
+          <v-btn-toggle
+            multiple
+            class="actions"
+            rounded
+          >
+            <v-btn
+              @click.stop="toggleCamera"
+              :title="camera ? 'Close camera' : 'Open camera'">
+              <v-icon>{{ camera ? 'mdi-camera-off' : 'mdi-camera' }}</v-icon>
+            </v-btn>
+            <v-btn
+              @click.stop="toggleFullscreen"
+              :title="fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'">
+              <v-icon>{{ fullscreen ? 'mdi-fullscreen-exit' : 'mdi-fullscreen' }}</v-icon>
+            </v-btn>
+          </v-btn-toggle>
+          <div class="camera-wrapper">
+            <div id="camera" class="mr-3"></div>
+          </div>
         </div>
       </div>
-    </div>
+    </PasswordVerification>
   </div>
 </template>
 
@@ -121,6 +123,12 @@ export default {
     }
   },
   methods: {
+    loadConfig() {
+      addEventListener( "keydown", this.onKeydown);
+      addEventListener('fullscreenchange', this.fullscreenChange);
+      addEventListener('onmousemove', this.onMouseMove);
+      this.$store.dispatch("checkin/loadConfig");
+    },
     showMessage(success, data, customDuration) {
       clearInterval(this.clearTyped);
       this.clearTypedCounter = 0;
@@ -256,12 +264,6 @@ export default {
         this.cameraScannerY = e.clientY;
       }
     }
-  },
-  mounted() {
-    addEventListener( "keydown", this.onKeydown);
-    addEventListener('fullscreenchange', this.fullscreenChange);
-    addEventListener('onmousemove', this.onMouseMove);
-    this.$store.dispatch("checkin/loadConfig");
   },
   beforeDestroy() {
     removeEventListener( "keydown", this.onKeydown);
