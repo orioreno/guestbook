@@ -20,7 +20,7 @@
 
           <v-divider class="mt-2"></v-divider>
           <v-list-item class="mt-2">
-            <CreateEventDialog :persistent="events !== null" />
+            <CreateEventDialog/>
           </v-list-item>
         </v-list>
       </div>
