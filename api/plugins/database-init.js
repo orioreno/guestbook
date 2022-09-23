@@ -1,7 +1,7 @@
 const sqlite3 = require('sqlite3').verbose()
 const fs = require('fs')
-const dir = process.env.DBDIR;
-const filename = process.env.DBNAME;
+const dir = process.env.DBDIR || "db";
+const filename = process.env.DBNAME || "guestbook.db";
 
 
 // Create db directory if not exist
@@ -63,7 +63,9 @@ const db = new sqlite3.Database(dir + '/' + filename, function (err) {
       failed_overlay_color TEXT,
       background_image BLOB,
       success_audio BLOB,
-      failed_audio BLOB
+      failed_audio BLOB,
+      created INTEGER,
+      modified INTEGER
       )`,
     (err) => {
         if (!err) {
@@ -102,7 +104,8 @@ const db = new sqlite3.Database(dir + '/' + filename, function (err) {
       id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
       event_id INTEGER NOT NULL,
       guest_id INTEGER NOT NULL,
-      time INTEGER NOT NULL
+      time INTEGER NOT NULL,
+      manual INTEGER NOT NULL
     )`,
     (err) => {
         if (!err) {

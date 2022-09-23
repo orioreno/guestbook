@@ -4,7 +4,7 @@
   "description": "",
   "main": "genenv.js",
   "scripts": {
-    "start": "node genenv.js && concurrently --names \"API,SITE\" -c \"bgBlue,bgYellow\" \"cd ../api-node && npm install && npm run dev\" \"cd ../site && npm install && npm run dev\""
+    "start": "node genenv.js && concurrently --names \"API,SITE\" -c \"bgBlue,bgYellow\" \"cd ../api && npm install && npm run dev\" \"cd ../site && npm install && npm run dev\""
   },
   "keywords": [],
   "author": "",

@@ -81,6 +81,7 @@ export default {
       this.$axios.$post('event', {name: this.name, password: this.password})
         .then((resp) => {
           this.$store.commit("snackbar/show", {text: 'New event ' + this.name + ' created!'});
+          this.$store.dispatch('event/createCookie', {id: resp.id, password: this.password});
           window.location.reload(true);
         })
         .catch((err) => {

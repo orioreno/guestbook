@@ -6,8 +6,8 @@ export default {
 
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
-    titleTemplate: '%s - Guestbook',
-    title: 'nuxt-vuetify-guestbook',
+    titleTemplate: '%s',
+    title: 'Guestbook',
     htmlAttrs: {
       lang: 'en'
     },

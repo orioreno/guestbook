@@ -35,7 +35,7 @@ for (const name of Object.keys(nets)) {
 }
 
 // CREATE .env AT API
-createEnv('../api-node/.env', {
+createEnv('../api/.env', {
   'PORT': process.env.API_PORT || 5001,
   'DBDIR': process.env.DB_DIRECTORY || 'db',
   'DBNAME': process.env.DB_NAME || 'guestbook.db'

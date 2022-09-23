@@ -1,4 +1,11 @@
-database
-composer.lock
-vendor
+# Dependency directories
+node_modules/
+
+# dotenv environment variables file
+.env
+
+# macOS
 .DS_Store
+
+# Databases
+db

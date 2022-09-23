@@ -1,13 +1,14 @@
-# API
-
-## Requirements
-PHP minimum version 7.4
+# node-api
 
 ## Build Setup
 
 ```bash
 # install dependencies
-$ php composer.phar install
+$ npm install
 
-# serve at localhost:3001
-$ php -S localhost:3001
+# serve with hot reload at localhost:3000
+$ npm run dev
+
+# build for production and launch server
+$ npm run start
+```

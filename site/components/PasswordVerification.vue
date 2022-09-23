@@ -47,8 +47,6 @@
 </template>
 
 <script>
-import sha256 from 'crypto-js/sha256';
-
 export default {
   name: 'VerificationDialog',
   props: {
@@ -67,11 +65,7 @@ export default {
   methods: {
     async verify() {
       if (this.password == this.event.password) {
-        const cookie = {
-          'id': this.event.id,
-          'pwd': btoa(sha256(this.password))
-        };
-        document.cookie = "evtData=" + JSON.stringify(cookie) + "; expires=" + this.$moment().add(1, 'hour').format('Y-MM-DD HH:mm:ss')+ "; path=/";
+        this.$store.dispatch('event/createCookie', {id: this.event.id, password: this.password});
         this.manualVerified = true;
       } else {
         this.passwordError = true;
@@ -90,6 +84,7 @@ export default {
     },
     cookieVerified() {
       if (this.event) {
+        const sha256 = require('crypto-js/sha256');
         const value = `; ${document.cookie}`;
         const parts = value.split(`; evtData=`);
         if (parts.length === 2) {
