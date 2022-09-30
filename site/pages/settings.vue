@@ -308,12 +308,14 @@ export default {
       if (this.tempFailedAudio !== this.checkinConfig.failed_audio)
         this.checkinConfig.failed_audio = this.tempFailedAudio;
 
-      this.$axios.$patch('checkin/config', this.checkinConfig)
+      this.$axios.patch('checkin/config', this.checkinConfig)
         .then((res) => {
           this.$store.commit("snackbar/show", {text: 'Check in configuration has been saved'});
           this.getCheckinConfig();
         })
         .catch((err) => {
+          console.log('error nih');
+          console.log(err);
           this.$store.commit("snackbar/show", {text: err.response.data, color: 'error'});
         })
         .then(() => {

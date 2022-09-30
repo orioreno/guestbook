@@ -42,15 +42,12 @@
       <v-toolbar-title v-text="selectedEvent.name" />
 
       <v-spacer></v-spacer>
-
-
-      <EventList loadEventOnMounted v-if="!selectedEvent.id"></EventList>
-
     </v-app-bar>
 
     <v-main>
       <v-container>
         <Nuxt v-if="selectedEvent.id"/>
+        <EventList loadEventOnMounted v-else></EventList>
       </v-container>
       <Snackbar></Snackbar>
     </v-main>
