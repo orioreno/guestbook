@@ -88,7 +88,7 @@
       </v-card-title>
       <v-card-subtitle>
         <v-text-field
-          v-model="search"
+          v-model="searchNotCheckedIn"
           append-icon="mdi-magnify"
           label="Search"
           single-line
@@ -99,7 +99,7 @@
         <v-data-table
           :headers="headers"
           :items="guests.filter((val) => { return !val.last_checkin})"
-          :search="search"
+          :search="searchNotCheckedIn"
           :loading="loading"
           sort-by="name"
           loading-text="Loading data"
@@ -113,7 +113,7 @@
       </v-card-title>
       <v-card-subtitle>
         <v-text-field
-          v-model="search"
+          v-model="searchCheckedIn"
           append-icon="mdi-magnify"
           label="Search"
           single-line
@@ -124,7 +124,7 @@
         <v-data-table
           :headers="headersCheckIn"
           :items="guests.filter((val) => { return val.last_checkin})"
-          :search="search"
+          :search="searchCheckedIn"
           :loading="loading"
           sort-by="last_checkin"
           :sort-desc="true"
@@ -200,7 +200,8 @@ export default {
   data() {
     return {
       loading: false,
-      search: "",
+      searchCheckedIn: "",
+      searchNotCheckedIn: "",
       last_update: null,
       refresh_rate: 5,
       historyDialog: false,

@@ -186,7 +186,9 @@ export default {
           message: '',
           time:0
         }
-        this.$axios.$post('checkin', {checkin_code: this.typed})
+        const checkin_code = this.typed + '';
+        this.typed = '';
+        this.$axios.$post('checkin', {checkin_code: checkin_code})
           .then((res) => {
             success = true;
             data.message = res.message;
