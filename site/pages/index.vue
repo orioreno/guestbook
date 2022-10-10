@@ -84,50 +84,37 @@
     </v-card>
     <v-card class="mb-3">
       <v-card-title class="text-center d-block">
-        Not checked in yet
+        Guest list
       </v-card-title>
       <v-card-subtitle>
-        <v-text-field
-          v-model="searchNotCheckedIn"
-          append-icon="mdi-magnify"
-          label="Search"
-          single-line
-          hide-details
-        ></v-text-field>
+        <div class="row">
+          <div class="col-md-6">
+            <v-select
+              :items="[{'value' : 'all', 'text': 'Show all'}, {'value' : 'attended', 'text': 'Attended'}, {'value' : 'unattended', 'text': 'Unattended'}]"
+              item-text="text"
+              item-value="value"
+              v-model="guestFilter"
+              label="Attendance status"
+              outlined
+            ></v-select>
+          </div>
+          <div class="col-md-6">
+            <v-text-field
+              v-model="searchGuest"
+              append-icon="mdi-magnify"
+              label="Search"
+              outlined
+            ></v-text-field>
+          </div>
+        </div>
       </v-card-subtitle>
       <v-card-text>
         <v-data-table
-          :headers="headers"
-          :items="guests.filter((val) => { return !val.last_checkin})"
-          :search="searchNotCheckedIn"
+          :headers="headersGuests"
+          :items="filteredGuests"
+          :search="searchGuest"
           :loading="loading"
           sort-by="name"
-          loading-text="Loading data"
-        >
-        </v-data-table>
-      </v-card-text>
-    </v-card>
-    <v-card class="mb-3">
-      <v-card-title class="text-center d-block">
-        Have checked in
-      </v-card-title>
-      <v-card-subtitle>
-        <v-text-field
-          v-model="searchCheckedIn"
-          append-icon="mdi-magnify"
-          label="Search"
-          single-line
-          hide-details
-        ></v-text-field>
-      </v-card-subtitle>
-      <v-card-text>
-        <v-data-table
-          :headers="headersCheckIn"
-          :items="guests.filter((val) => { return val.last_checkin})"
-          :search="searchCheckedIn"
-          :loading="loading"
-          sort-by="last_checkin"
-          :sort-desc="true"
           loading-text="Loading data"
         >
           <template v-slot:item.actions="{ item }">
@@ -200,6 +187,8 @@ export default {
   data() {
     return {
       loading: false,
+      searchGuest: "",
+      guestFilter: "all",
       searchCheckedIn: "",
       searchNotCheckedIn: "",
       last_update: null,
@@ -307,7 +296,7 @@ export default {
       var columns = this.$store.state.guest.columns;
       return columns;
     },
-    headersCheckIn() {
+    headersGuests() {
       const columns = [...this.headers];
       if (columns) {
         columns.push({
@@ -352,6 +341,15 @@ export default {
       }
 
       return data;
+    },
+    filteredGuests() {
+      let filtered = this.guests;
+      if (this.guestFilter == "attended") {
+        filtered = this.guests.filter((val) => { return val.last_checkin});
+      } else if (this.guestFilter == "unattended") {
+        filtered = this.guests.filter((val) => { return !val.last_checkin});
+      }
+      return filtered;
     }
   },
 }

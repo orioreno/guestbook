@@ -78,8 +78,8 @@
             v-model="search"
             append-icon="mdi-magnify"
             label="Search"
-            single-line
-            hide-details
+            outlined
+            class="mt-3"
           ></v-text-field>
         </v-card-subtitle>
         <v-data-table
