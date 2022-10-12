@@ -87,11 +87,20 @@ export default {
                     to: "/events"
                 },
             ],
+            eventTimer: null
         };
     },
     mounted() {
+        this.$axios.defaults.baseURL = 'http://' + window.location.hostname + ':' + process.env.apiPort;
+        console.log("API Connection to: " + this.$axios.defaults.baseURL);
+
         this.$store.commit("navbar/loadLocalSettings");
         this.$store.dispatch("event/load");
+        clearInterval(this.eventTimer);
+        console.log('mount');
+        this.eventTimer = setInterval(() => {
+          this.$store.dispatch("event/loadSelected");
+        }, 3000);
     },
     computed: {
         drawer: {

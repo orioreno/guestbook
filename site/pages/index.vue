@@ -200,7 +200,6 @@ export default {
   },
   methods: {
     loadData() {
-      this.$store.dispatch("event/loadSelected");
       this.$store.dispatch("guest/load");
       this.$store.dispatch("checkin/load");
       this.last_update = this.$moment().format("Y-MM-DD HH:mm:ss");

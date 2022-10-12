@@ -74,7 +74,6 @@ export default {
     }
   },
   mounted() {
-    this.$store.dispatch("event/loadSelected");
     if (this.show && this.verified) {
       this.verified();
     }

@@ -44,7 +44,7 @@ createEnv('../api/.env', {
 
 // CREATE .env AT SITE
 createEnv('../site/.env', {
-  'API_URL': 'http://' + (ips.en0 ? ips.en0[0] : 'localhost') + ':' + (process.env.API_PORT || 5001),
+  'API_PORT': process.env.API_PORT || 5001,
   'SITE_PORT': process.env.SITE_PORT || 5000
 });
 
