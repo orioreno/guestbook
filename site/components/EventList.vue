@@ -97,7 +97,9 @@ export default {
             .then((res) => {
               this.$store.commit("snackbar/show", {text: "Event changed to " + res.name + "!"});
               this.$store.dispatch('event/createCookie', {id: this.changeTo.id, password: this.password});
-              window.location.reload(true);
+              this.$store.dispatch("event/load");
+              this.passwordDialog = false;
+              // window.location.reload(true);
             })
             .catch((err) => {
               this.$store.commit("snackbar/show", {text: "Failed to change event", color: 'error'});
