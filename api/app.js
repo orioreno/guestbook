@@ -11,7 +11,7 @@ var app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
-app.use(logger('dev'));
+app.use(logger('short'));
 app.use(express.json({ limit: '10mb'}));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -25,7 +25,6 @@ app.use(function (req, res, next) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
   // Request headers you wish to allow
   res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-  console.log(`REQUEST FROM: ${req.socket.remoteAddress}`);
   next();
 });
 
