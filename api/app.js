@@ -3,6 +3,10 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+const moment = require('moment-timezone');
+logger.token('localTime', (req, res, tz) => {
+  return moment().tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('DD-MM-yyyy HH:mm:ss');
+})
 require('./plugins/database-init.js');
 
 var app = express();
@@ -11,7 +15,7 @@ var app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
-app.use(logger('short'));
+app.use(logger('[:localTime] :remote-addr :remote-user :method :url HTTP/:http-version :status :res[content-length] - :response-time ms :user-agent'));
 app.use(express.json({ limit: '10mb'}));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
