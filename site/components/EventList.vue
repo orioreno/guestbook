@@ -99,6 +99,7 @@ export default {
               this.$store.dispatch('event/createCookie', {id: this.changeTo.id, password: this.password});
               this.$store.dispatch("event/load");
               this.passwordDialog = false;
+              this.password = '';
               // window.location.reload(true);
             })
             .catch((err) => {
