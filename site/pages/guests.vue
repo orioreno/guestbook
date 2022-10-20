@@ -92,44 +92,40 @@
           loading-text="Loading data"
         >
           <template v-slot:item.actions="{ item }">
-            <v-icon
-              small
-              class="mr-2"
-              @click="showQr(item)"
-            >
-              mdi-qrcode
-            </v-icon>
-            <v-icon
-              small
-              class="mr-2"
-              @click="manualCheckIn(item)"
-              title="Manual check in"
-            >
-              mdi-account-check
-            </v-icon>
-            <v-icon
-              small
-              class="mr-2"
-              @click="showHistory(item)"
-              title="Show check in history"
-            >
-              mdi-history
-            </v-icon>
-            <v-icon
-              small
-              class="mr-2"
-              @click="openGuestForm(item)"
-            >
-              mdi-pencil
-            </v-icon>
-            <v-icon
-              small
-              class="mr-2"
-              @click="deleteGuest(item)"
-            >
-              mdi-delete
-            </v-icon>
-
+            <v-menu>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn
+                  v-bind="attrs"
+                  v-on="on"
+                  small
+                >
+                  Actions
+                  <v-icon
+                    right
+                    dark
+                  >
+                    mdi-chevron-down
+                  </v-icon>
+                </v-btn>
+              </template>
+              <v-list>
+                <v-list-item @click="showQr(item)">
+                  <v-list-item-title>Show QR code</v-list-item-title>
+                </v-list-item>
+                <v-list-item @click="manualCheckIn(item)">
+                  <v-list-item-title>Manual check in</v-list-item-title>
+                </v-list-item>
+                <v-list-item @click="showHistory(item)">
+                  <v-list-item-title>Check in history</v-list-item-title>
+                </v-list-item>
+                <v-list-item @click="openGuestForm(item)">
+                  <v-list-item-title>Edit guest</v-list-item-title>
+                </v-list-item>
+                <v-list-item @click="deleteGuest(item)">
+                  <v-list-item-title>Delete guest</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-menu>
           </template>
         </v-data-table>
       </v-card>

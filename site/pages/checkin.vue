@@ -39,12 +39,14 @@
           <v-btn
             @click.stop="toggleCamera"
             :title="camera ? 'Close camera' : 'Open camera'">
-            <v-icon>{{ camera ? 'mdi-camera-off' : 'mdi-camera' }}</v-icon>
+            <v-icon left>{{ camera ? 'mdi-camera-off' : 'mdi-camera' }}</v-icon>
+            Open camera
           </v-btn>
           <v-btn
             @click.stop="toggleFullscreen"
             :title="fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'">
-            <v-icon>{{ fullscreen ? 'mdi-fullscreen-exit' : 'mdi-fullscreen' }}</v-icon>
+            <v-icon left>{{ fullscreen ? 'mdi-fullscreen-exit' : 'mdi-fullscreen' }}</v-icon>
+            Enter fullscreen
           </v-btn>
         </v-btn-toggle>
         <div class="camera-wrapper">

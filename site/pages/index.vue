@@ -118,14 +118,17 @@
           loading-text="Loading data"
         >
           <template v-slot:item.actions="{ item }">
-            <v-icon
+            <v-btn
               small
-              class="mr-2"
               @click="showHistory(item)"
-              title="Show check in history"
             >
-              mdi-history
-            </v-icon>
+              <v-icon
+                left
+              >
+                mdi-history
+              </v-icon>
+              Check in history
+            </v-btn>
           </template>
         </v-data-table>
       </v-card-text>
